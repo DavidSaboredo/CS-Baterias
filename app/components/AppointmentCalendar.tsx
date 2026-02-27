@@ -43,6 +43,7 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [currentTitle, setCurrentTitle] = useState('')
 
   const calendarRef = useRef<FullCalendar>(null)
 
@@ -268,15 +269,24 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
           z-index: 50 !important;
         }
       `}</style>
+
+      {/* Mobile Title Display */}
+      {isMobile && (
+        <h2 className="text-lg font-bold text-gray-900 mb-4 text-center capitalize">
+          {currentTitle}
+        </h2>
+      )}
+
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         headerToolbar={{
           left: isMobile ? 'prev,next' : 'prev,next today',
-          center: 'title',
+          center: isMobile ? '' : 'title',
           right: isMobile ? 'timeGridDay,timeGridWeek' : 'dayGridMonth,timeGridWeek,timeGridDay'
         }}
+        datesSet={(arg) => setCurrentTitle(arg.view.title)}
         locale="es"
         slotMinTime="08:00:00"
         slotMaxTime="20:00:00"
