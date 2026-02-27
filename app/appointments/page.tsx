@@ -22,7 +22,7 @@ export default async function AppointmentsPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-2 md:p-6 rounded-lg shadow-sm border border-gray-200">
         <AppointmentCalendarWrapper clients={clients} />
       </div>
     </div>

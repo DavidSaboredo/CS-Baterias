@@ -42,8 +42,29 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
   const [duration, setDuration] = useState(60) // minutes
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   const calendarRef = useRef<FullCalendar>(null)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile() // Check on mount
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  useEffect(() => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi()
+      const newView = isMobile ? 'timeGridDay' : 'timeGridWeek'
+      if (calendarApi.view.type !== newView) {
+        calendarApi.changeView(newView)
+      }
+    }
+  }, [isMobile])
 
   useEffect(() => {
     fetchAppointments()
@@ -176,7 +197,7 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
   }
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
+    <div className="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100 relative">
       <style jsx global>{`
         .fc-theme-standard .fc-scrollgrid {
           border: 1px solid #f3f4f6;
@@ -252,9 +273,9 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         headerToolbar={{
-          left: 'prev,next today',
+          left: isMobile ? 'prev,next' : 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          right: isMobile ? 'timeGridDay,timeGridWeek' : 'dayGridMonth,timeGridWeek,timeGridDay'
         }}
         locale="es"
         slotMinTime="08:00:00"
