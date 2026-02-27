@@ -1,0 +1,211 @@
+'use client'
+
+import { createSale } from '@/app/actions'
+import { useState } from 'react'
+import Link from 'next/link'
+
+type Client = {
+  id: number
+  name: string
+  licensePlate: string | null
+}
+
+type Product = {
+  id: number
+  brand: string
+  model: string
+  amperage: string
+  price: number
+  stock: number
+}
+
+export default function NewSaleForm({ clients, products }: { clients: Client[], products: Product[] }) {
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [price, setPrice] = useState<string>('')
+  const [discountInfo, setDiscountInfo] = useState<{ amount: number, percent: number } | null>(null)
+  
+  // Constante de política comercial (ej. 20% máximo)
+  const MAX_DISCOUNT_PERCENT = 20
+
+  const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const product = products.find(p => p.id === parseInt(e.target.value))
+    setSelectedProduct(product || null)
+    if (product) {
+      setPrice(product.price.toString())
+      setDiscountInfo(null)
+    } else {
+      setPrice('')
+      setDiscountInfo(null)
+    }
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPrice = e.target.value
+    setPrice(newPrice)
+    
+    if (selectedProduct && newPrice) {
+      const currentPriceVal = parseFloat(newPrice)
+      const originalPrice = selectedProduct.price
+      
+      if (currentPriceVal < originalPrice) {
+        const amount = originalPrice - currentPriceVal
+        const percent = (amount / originalPrice) * 100
+        setDiscountInfo({ amount, percent })
+      } else {
+        setDiscountInfo(null)
+      }
+    }
+  }
+
+  return (
+    <form action={createSale} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+      
+      {/* Paso 1: Cliente */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">1. Seleccionar Cliente</h3>
+        <div className="flex gap-2">
+          <select 
+            name="clientId" 
+            required 
+            className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Buscar cliente...</option>
+            {clients.map(client => (
+              <option key={client.id} value={client.id}>
+                {client.name} {client.licensePlate ? `(${client.licensePlate})` : ''}
+              </option>
+            ))}
+          </select>
+          <Link href="/clients" className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 flex items-center">
+            + Nuevo
+          </Link>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 pt-6"></div>
+
+      {/* Paso 2: Producto */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">2. Seleccionar Producto</h3>
+        <select 
+          name="productId" 
+          required 
+          className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+          onChange={handleProductChange}
+        >
+          <option value="">Seleccionar producto...</option>
+          {products.map(product => (
+            <option key={product.id} value={product.id} disabled={product.stock <= 0}>
+              {product.brand} {product.model} ({product.amperage}) - ${product.price} {product.stock <= 0 ? '(Sin Stock)' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Paso 3: Detalles */}
+      {selectedProduct && (
+        <div key={selectedProduct.id} className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="border-t border-gray-200 pt-6 mt-6"></div>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">3. Detalles de la Venta</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Número de Serie *</label>
+              <input
+                type="text"
+                name="serialNumber"
+                required
+                className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+                placeholder="SN..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Precio Final *</label>
+              <div className="relative rounded-md shadow-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="text-gray-500 sm:text-sm">$</span>
+                </div>
+                <input
+                  type="number"
+                  name="price"
+                  step="0.01"
+                  required
+                  value={price}
+                  onChange={handlePriceChange}
+                  className={`block w-full rounded-md pl-7 p-2 border focus:ring-blue-500 focus:border-blue-500 ${
+                    discountInfo && discountInfo.percent > MAX_DISCOUNT_PERCENT 
+                      ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300'
+                  }`}
+                />
+              </div>
+              
+              {/* Reporte de Descuento / Alerta Visual */}
+              {discountInfo && (
+                <div className={`mt-3 p-4 rounded-md border ${
+                  discountInfo.percent > MAX_DISCOUNT_PERCENT 
+                    ? 'bg-red-50 border-red-200' 
+                    : 'bg-yellow-50 border-yellow-200'
+                }`}>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      {discountInfo.percent > MAX_DISCOUNT_PERCENT ? (
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <h3 className={`text-sm font-medium ${
+                        discountInfo.percent > MAX_DISCOUNT_PERCENT ? 'text-red-800' : 'text-yellow-800'
+                      }`}>
+                        {discountInfo.percent > MAX_DISCOUNT_PERCENT 
+                          ? '¡Descuento excede política comercial!' 
+                          : 'Se aplicará un descuento'}
+                      </h3>
+                      <div className={`mt-2 text-sm ${
+                        discountInfo.percent > MAX_DISCOUNT_PERCENT ? 'text-red-700' : 'text-yellow-700'
+                      }`}>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Monto descontado: <strong>${discountInfo.amount.toFixed(2)}</strong></li>
+                          <li>Porcentaje: <strong>{discountInfo.percent.toFixed(1)}%</strong> {discountInfo.percent > MAX_DISCOUNT_PERCENT && `(Máx: ${MAX_DISCOUNT_PERCENT}%)`}</li>
+                          <li>Autorizado por: <strong>salvador</strong></li>
+                          <li>Fecha: {new Date().toLocaleString()}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Garantía (meses)</label>
+              <input
+                type="number"
+                name="warrantyDuration"
+                defaultValue={12}
+                className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="pt-6">
+        <button
+          type="submit"
+          disabled={!selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
+          className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Confirmar Venta
+        </button>
+      </div>
+    </form>
+  )
+}
