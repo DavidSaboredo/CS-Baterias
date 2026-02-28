@@ -8,6 +8,14 @@ export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
 
   useEffect(() => {
+    // Register service worker for PWA installability
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => console.log('SW registered: ', registration))
+        .catch((error) => console.log('SW registration failed: ', error))
+    }
+
     const handler = (e: any) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault()
