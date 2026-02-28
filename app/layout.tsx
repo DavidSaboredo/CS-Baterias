@@ -8,6 +8,14 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "CS Audio Baterías",
   description: "Sistema de Gestión de Stock y Ventas",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'CS Audio',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
