@@ -7,10 +7,15 @@ export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    // Detect iOS
+    // Detect Mobile
     const userAgent = window.navigator.userAgent.toLowerCase()
+    const isMobileDevice = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(userAgent)
+    setIsMobile(isMobileDevice)
+
+    // Detect iOS
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent)
     setIsIOS(isIosDevice)
 
@@ -18,6 +23,12 @@ export default function InstallPrompt() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
     if (isStandalone) {
       return
+    }
+
+    // Always show prompt on mobile if not installed (fallback if event missed)
+    if (isMobileDevice && !isStandalone) {
+      // Small delay to allow browser to fire event first if possible
+      setTimeout(() => setShowPrompt(true), 2000)
     }
 
     // Register service worker for PWA installability
@@ -39,27 +50,26 @@ export default function InstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handler)
 
-    // Force show prompt for iOS or if event missed but valid PWA
-    if (isIosDevice && !isStandalone) {
-      setShowPrompt(true)
-    }
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
     }
   }, [])
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
-    // Show the install prompt
-    deferredPrompt.prompt()
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice
-    // Optionally, send analytics event with outcome of user choice
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null)
+    if (deferredPrompt) {
+      // Show the install prompt
+      deferredPrompt.prompt()
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice
+      // Optionally, send analytics event with outcome of user choice
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null)
+        setShowPrompt(false)
+      }
+    } else {
+      // Fallback if no deferred prompt (e.g. manual trigger or event missed)
+      alert("Para instalar: Toca el menú del navegador (⋮) y selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.")
     }
-    setShowPrompt(false)
   }
 
   if (!showPrompt) return null
