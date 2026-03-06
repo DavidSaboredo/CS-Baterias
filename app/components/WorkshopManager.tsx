@@ -213,11 +213,11 @@ export default function WorkshopManager({ clients, products }: { clients: Client
             {/* Add Product from Stock */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Producto de Stock</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
+                  className="flex-1 w-full min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                 >
                   <option value="">Seleccionar producto...</option>
                   {products.map(p => (
@@ -229,7 +229,7 @@ export default function WorkshopManager({ clients, products }: { clients: Client
                 <button
                   onClick={handleAddProduct}
                   disabled={!selectedProductId}
-                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="shrink-0 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
