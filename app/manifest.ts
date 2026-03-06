@@ -6,30 +6,32 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'CS Audio',
     description: 'Sistema de Gestión de Stock y Ventas',
     start_url: '/',
+    scope: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#ffffff',
     theme_color: '#ef4444',
     icons: [
       {
-        src: '/icon.png',
+        src: '/logo.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/icon.png',
+        src: '/logo.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: '/icon.png',
+        src: '/logo.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable'
       },
       {
-        src: '/icon.png',
+        src: '/logo.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable'

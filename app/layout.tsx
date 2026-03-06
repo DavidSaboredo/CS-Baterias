@@ -8,6 +8,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "CS Audio Baterías",
   description: "Sistema de Gestión de Stock y Ventas",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
+  themeColor: "#ef4444",
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

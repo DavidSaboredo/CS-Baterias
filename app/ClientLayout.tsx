@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import Sidebar from "@/app/components/Sidebar"
 import MobileNav from "@/app/components/MobileNav"
 import InstallPrompt from "@/app/components/InstallPrompt"
+import ServiceWorkerRegister from "@/app/components/ServiceWorkerRegister"
 
 export default function ClientLayout({
   children,
@@ -19,6 +20,7 @@ export default function ClientLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <ServiceWorkerRegister />
       <InstallPrompt />
       {/* Sidebar */}
       <aside className="w-64 fixed inset-y-0 left-0 z-50 hidden lg:block border-r border-gray-200 bg-white">
