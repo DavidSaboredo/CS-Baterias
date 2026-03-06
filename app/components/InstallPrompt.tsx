@@ -8,6 +8,14 @@ export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
+
+  useEffect(() => {
+    // If the event fires after we showed instructions, switch back to button
+    if (deferredPrompt) {
+      setShowInstructions(false)
+    }
+  }, [deferredPrompt])
 
   useEffect(() => {
     // Detect Mobile
@@ -68,7 +76,7 @@ export default function InstallPrompt() {
       }
     } else {
       // Fallback if no deferred prompt (e.g. manual trigger or event missed)
-      alert("Para instalar: Toca el menú del navegador (⋮) y selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.")
+      setShowInstructions(true)
     }
   }
 
@@ -86,14 +94,28 @@ export default function InstallPrompt() {
             Instala la aplicación para un acceso más rápido y mejor experiencia.
           </p>
           
-          {isIOS ? (
+          {isIOS || showInstructions ? (
             <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
-              <p className="flex items-center gap-2 mb-2">
-                1. Toca el botón compartir <Share className="w-4 h-4 inline" />
-              </p>
-              <p className="flex items-center gap-2">
-                2. Selecciona "Agregar al inicio" <PlusSquare className="w-4 h-4 inline" />
-              </p>
+              {isIOS ? (
+                <>
+                  <p className="flex items-center gap-2 mb-2">
+                    1. Toca el botón compartir <Share className="w-4 h-4 inline" />
+                  </p>
+                  <p className="flex items-center gap-2">
+                    2. Selecciona "Agregar al inicio" <PlusSquare className="w-4 h-4 inline" />
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2 font-medium text-gray-900">Instalación manual:</p>
+                  <p className="flex items-center gap-2 mb-2">
+                    1. Toca el menú del navegador (⋮)
+                  </p>
+                  <p className="flex items-center gap-2">
+                    2. Selecciona "Instalar aplicación" o "Agregar a la pantalla principal"
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <div className="flex gap-3 mt-3">
