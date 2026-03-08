@@ -1,9 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "@/app/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  themeColor: "#ef4444",
+};
 
 export const metadata: Metadata = {
   title: "CS Audio Baterías",
@@ -13,7 +17,6 @@ export const metadata: Metadata = {
     icon: "/logo.png",
     apple: "/logo.png",
   },
-  themeColor: "#ef4444",
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
