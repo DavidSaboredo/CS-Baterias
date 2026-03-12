@@ -3,6 +3,8 @@
 import { createSale } from '@/app/actions'
 import { useState } from 'react'
 import Link from 'next/link'
+import { savePendingAction } from '@/lib/offline-db'
+import { useRouter } from 'next/navigation'
 
 type Client = {
   id: number
@@ -23,6 +25,8 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [price, setPrice] = useState<string>('')
   const [discountInfo, setDiscountInfo] = useState<{ amount: number, percent: number } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
   
   // Constante de política comercial (ej. 20% máximo)
   const MAX_DISCOUNT_PERCENT = 20
@@ -57,8 +61,38 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
     }
   }
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (isSubmitting) return
+    setIsSubmitting(true)
+
+    const formData = new FormData(e.currentTarget)
+    
+    // Check if online
+    if (!navigator.onLine) {
+      const data = Object.fromEntries(formData.entries())
+      await savePendingAction({
+        type: 'SALE',
+        data
+      })
+      window.dispatchEvent(new CustomEvent('offline-action-saved'))
+      alert('Venta guardada en el celular. Se sincronizará cuando recuperes internet.')
+      router.push('/sales')
+      return
+    }
+
+    try {
+      await createSale(formData)
+    } catch (error) {
+      console.error('Error al crear venta:', error)
+      alert('Error al crear la venta. Inténtalo de nuevo.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <form action={createSale} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
       
       {/* Paso 1: Cliente */}
       <div>
@@ -200,12 +234,13 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
       <div className="pt-6">
         <button
           type="submit"
-          disabled={!selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
+          disabled={isSubmitting || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
           className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Confirmar Venta
+          {isSubmitting ? 'Procesando...' : 'Confirmar Venta'}
         </button>
       </div>
     </form>
   )
 }
+

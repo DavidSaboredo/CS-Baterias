@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 import { getPendingActions, deletePendingAction, PendingAction } from '@/lib/offline-db';
 import { useRouter } from 'next/navigation';
+import { createSale } from '@/app/actions';
 
 export default function OfflineActionsManager() {
   const [pendingCount, setPendingCount] = useState(0);
@@ -40,13 +41,16 @@ export default function OfflineActionsManager() {
       const actions = await getPendingActions();
       
       for (const action of actions) {
-        // Here we'll need to call the actual server actions
-        // For now, let's just simulate or prepare the structure
         try {
-          // This part depends on how we want to handle each action type
-          // Let's assume we have a generic sync endpoint or logic
-          // For now, let's just mark it as synced after 1 second
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          if (action.type === 'SALE') {
+            const formData = new FormData();
+            Object.entries(action.data).forEach(([key, value]) => {
+              formData.append(key, value as string);
+            });
+            await createSale(formData);
+          }
+          // Add other action types here as we implement them
+          
           await deletePendingAction(action.id);
         } catch (e) {
           console.error('Error syncing action:', action.id, e);
