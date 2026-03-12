@@ -71,7 +71,14 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Registrar Venta</h3>
-            <form action={addSale.bind(null, client.id)} className="space-y-4">
+            <form 
+              action={async (formData: FormData) => {
+                'use server'
+                await addSale(client.id, formData)
+                redirect('/sales')
+              }} 
+              className="space-y-4"
+            >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Producto *</label>
                 <select 
