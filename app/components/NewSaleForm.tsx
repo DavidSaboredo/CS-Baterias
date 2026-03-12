@@ -1,6 +1,6 @@
 'use client'
 
-import { createSale } from '@/app/actions'
+import { addSale } from '@/app/actions'
 import { useState } from 'react'
 import Link from 'next/link'
 import { savePendingAction } from '@/lib/offline-db'
