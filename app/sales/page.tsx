@@ -81,7 +81,7 @@ export default async function SalesPage() {
                         {sale.status === 'active' ? 'Activa' : 'Vencida'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-center w-20">
                       <DeleteSaleButton 
                         saleId={sale.id} 
                         saleInfo={`${sale.product.brand} - SN: ${sale.serialNumber}`} 

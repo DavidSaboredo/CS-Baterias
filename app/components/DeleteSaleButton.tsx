@@ -41,10 +41,10 @@ export default function DeleteSaleButton({ saleId, saleInfo }: DeleteSaleButtonP
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
+        className="p-3 text-red-500 hover:text-red-700 transition-all rounded-xl bg-red-50 hover:bg-red-100 border border-red-100 shadow-sm active:scale-90"
         title="Eliminar venta"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-5 h-5" />
       </button>
     )
   }
