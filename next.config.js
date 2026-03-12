@@ -160,9 +160,9 @@ const withPWA = withPWAInit({
       handler: 'NetworkFirst',
       options: {
         cacheName: 'others',
-        networkTimeoutSeconds: 10,
+        networkTimeoutSeconds: 5, // Reducir timeout para que falle rápido si es offline
         expiration: {
-          maxEntries: 32,
+          maxEntries: 64, // Aumentar número de páginas guardadas
           maxAgeSeconds: 24 * 60 * 60, // 24 hours
         },
       },
@@ -175,7 +175,7 @@ const withPWA = withPWAInit({
       handler: 'NetworkFirst',
       options: {
         cacheName: 'cross-origin',
-        networkTimeoutSeconds: 10,
+        networkTimeoutSeconds: 5, // Reducir timeout
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 60 * 60, // 1 hour
@@ -185,6 +185,7 @@ const withPWA = withPWAInit({
   ],
   fallbacks: {
     document: '/offline',
+    // No poner fallback para imágenes o datos para evitar saltos visuales bruscos
   },
 });
 

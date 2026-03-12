@@ -18,8 +18,13 @@ export default function ClientLayout({
   const isLoginPage = pathname === '/login'
 
   useEffect(() => {
-    // Prefetch offline page to ensure it's in the cache
+    // Precargar páginas clave para que funcionen offline
     router.prefetch('/offline')
+    router.prefetch('/sales')
+    router.prefetch('/sales/new')
+    router.prefetch('/stock')
+    router.prefetch('/workshop')
+    router.prefetch('/clients')
   }, [router])
 
   if (isLoginPage) {

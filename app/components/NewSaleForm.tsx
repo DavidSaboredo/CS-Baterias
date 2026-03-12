@@ -76,8 +76,14 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
         data
       })
       window.dispatchEvent(new CustomEvent('offline-action-saved'))
-      alert('Venta guardada en el celular. Se sincronizará cuando recuperes internet.')
-      router.push('/sales')
+      alert('¡Venta guardada localmente! Se sincronizará en cuanto recuperes internet.')
+      
+      // Limpiar formulario en lugar de redirigir para evitar errores de red
+      setSelectedProduct(null)
+      setPrice('')
+      setDiscountInfo(null)
+      e.currentTarget.reset()
+      setIsSubmitting(false)
       return
     }
 
