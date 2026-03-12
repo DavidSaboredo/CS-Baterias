@@ -1,6 +1,7 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import Sidebar from "@/app/components/Sidebar"
 import MobileNav from "@/app/components/MobileNav"
 import InstallPrompt from "@/app/components/InstallPrompt"
@@ -11,7 +12,13 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const isLoginPage = pathname === '/login'
+
+  useEffect(() => {
+    // Prefetch offline page to ensure it's in the cache
+    router.prefetch('/offline')
+  }, [router])
 
   if (isLoginPage) {
     return <>{children}</>
