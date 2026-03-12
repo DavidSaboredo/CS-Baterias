@@ -238,3 +238,26 @@ export async function deleteSale(saleId: number, password?: string) {
   }
 }
 
+export async function updateProductStock(productId: number, newStock: number, password?: string) {
+  // Verificación de contraseña de administrador
+  if (password !== 'santino230525') {
+    return { success: false, error: 'Contraseña de administrador incorrecta' }
+  }
+
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { stock: newStock }
+    })
+
+    revalidatePath('/stock')
+    revalidatePath('/sales/new')
+    revalidatePath('/')
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error al actualizar stock:', error)
+    return { success: false, error: 'Error interno del servidor' }
+  }
+}
+

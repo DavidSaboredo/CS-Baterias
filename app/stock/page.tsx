@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { addProduct } from '@/app/actions'
 import DeleteProductForm from '@/app/components/DeleteProductForm'
+import EditStockButton from '@/app/components/EditStockButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,7 +110,12 @@ export default async function StockPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
                           ${product.price.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end items-center gap-2">
+                          <EditStockButton 
+                            productId={product.id} 
+                            productInfo={`${product.brand} ${product.model}`} 
+                            currentStock={product.stock} 
+                          />
                           <DeleteProductForm id={product.id} />
                         </td>
                       </tr>
