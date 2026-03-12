@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { addProduct } from '@/app/actions'
 import DeleteProductForm from '@/app/components/DeleteProductForm'
 import EditStockButton from '@/app/components/EditStockButton'
+import AddProductForm from '@/app/components/AddProductForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,52 +18,7 @@ export default async function StockPage() {
       <div className="space-y-8">
         {/* Formulario de Alta de Producto */}
         <div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">Nuevo Producto</h2>
-            <form action={addProduct} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Marca *</label>
-                  <input type="text" name="brand" required className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: Moura" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Modelo *</label>
-                  <input type="text" name="model" required className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: M20GD" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amperaje</label>
-                  <input type="text" name="amperage" className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: 65Ah" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Precio *</label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span className="text-gray-500 sm:text-sm">$</span>
-                    </div>
-                    <input type="number" name="price" step="0.01" required className="block w-full rounded-md border-gray-300 pl-7 p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="0.00" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
-                  <input type="number" name="stock" defaultValue={0} className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
-                  <input type="number" name="minStock" defaultValue={5} className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" />
-                </div>
-              </div>
-
-              <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors font-medium shadow-sm">
-                Guardar Producto
-              </button>
-            </form>
-          </div>
+          <AddProductForm />
         </div>
 
         {/* Lista de Productos */}

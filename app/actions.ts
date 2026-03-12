@@ -159,14 +159,14 @@ export async function createSale(formData: FormData) {
 }
 
 export async function addProduct(formData: FormData) {
-  const brand = (formData.get('brand') as string).trim()
-  const model = (formData.get('model') as string).trim()
-  const amperage = (formData.get('amperage') as string).trim()
+  const brand = (formData.get('brand') as string || '').trim()
+  const model = (formData.get('model') as string || '').trim()
+  const amperage = (formData.get('amperage') as string || '').trim()
   const stockToAdd = parseInt(formData.get('stock') as string) || 0
   const minStock = parseInt(formData.get('minStock') as string) || 5
-  const price = parseFloat(formData.get('price') as string)
+  const price = parseFloat(formData.get('price') as string) || 0
 
-  if (!brand || !model || !price) return
+  if (!brand || !model || price <= 0) return { success: false, error: 'Datos incompletos' }
 
   try {
     // Buscar si ya existe un producto con la misma marca, modelo y amperaje
@@ -205,8 +205,10 @@ export async function addProduct(formData: FormData) {
     revalidatePath('/stock')
     revalidatePath('/sales/new')
     revalidatePath('/')
+    return { success: true }
   } catch (error) {
     console.error('Error in addProduct (Smart Sum):', error)
+    return { success: false, error: 'Error al procesar producto' }
   }
 }
 
