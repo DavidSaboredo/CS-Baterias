@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 import { getPendingActions, deletePendingAction, PendingAction } from '@/lib/offline-db';
 import { useRouter } from 'next/navigation';
-import { createSale } from '@/app/actions';
+import { addSale } from '@/app/actions';
 
 export default function OfflineActionsManager() {
   const [pendingCount, setPendingCount] = useState(0);
@@ -47,11 +47,17 @@ export default function OfflineActionsManager() {
             Object.entries(action.data).forEach(([key, value]) => {
               formData.append(key, value as string);
             });
-            await createSale(formData);
+            const clientId = parseInt(formData.get('clientId') as string);
+            if (clientId) {
+              const result = await addSale(clientId, formData);
+              if (result?.success) {
+                await deletePendingAction(action.id);
+              } else {
+                throw new Error(result?.error || 'Error al sincronizar venta');
+              }
+            }
           }
           // Add other action types here as we implement them
-          
-          await deletePendingAction(action.id);
         } catch (e) {
           console.error('Error syncing action:', action.id, e);
           throw new Error('Error al sincronizar algunas acciones');

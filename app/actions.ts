@@ -138,8 +138,10 @@ export async function addSale(clientId: number, formData: FormData) {
     revalidatePath('/sales')
     revalidatePath('/')
     revalidatePath('/sales/new')
-  } catch (error) {
+    return { success: true }
+  } catch (error: any) {
     console.error('Error creating sale:', error)
+    return { success: false, error: error.message }
   }
 }
 
