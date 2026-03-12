@@ -8,11 +8,13 @@ interface EditStockButtonProps {
   productId: number
   productInfo: string
   currentStock: number
+  currentPrice: number
 }
 
-export default function EditStockButton({ productId, productInfo, currentStock }: EditStockButtonProps) {
+export default function EditStockButton({ productId, productInfo, currentStock, currentPrice }: EditStockButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [newStock, setNewStock] = useState(currentStock.toString())
+  const [newPrice, setNewPrice] = useState(currentPrice.toString())
   const [password, setPassword] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +27,12 @@ export default function EditStockButton({ productId, productInfo, currentStock }
     setError(null)
 
     try {
-      const result = await updateProductStock(productId, parseInt(newStock), password)
+      const result = await updateProductStock(
+        productId, 
+        parseInt(newStock), 
+        parseFloat(newPrice), 
+        password
+      )
       if (result.success) {
         setIsOpen(false)
         setPassword('')
@@ -68,18 +75,30 @@ export default function EditStockButton({ productId, productInfo, currentStock }
           </p>
 
           <form onSubmit={handleUpdate} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">Nuevo Stock</label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={newStock}
-                onChange={(e) => setNewStock(e.target.value)}
-                placeholder="Cantidad disponible"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                autoFocus
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">Stock</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={newStock}
+                  onChange={(e) => setNewStock(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">Precio ($)</label>
+                <input
+                  type="number"
+                  required
+                  step="0.01"
+                  min="0"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                />
+              </div>
             </div>
 
             <div>

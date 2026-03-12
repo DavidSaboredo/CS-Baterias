@@ -159,31 +159,54 @@ export async function createSale(formData: FormData) {
 }
 
 export async function addProduct(formData: FormData) {
-  const brand = formData.get('brand') as string
-  const model = formData.get('model') as string
-  const amperage = formData.get('amperage') as string
-  const stock = parseInt(formData.get('stock') as string)
-  const minStock = parseInt(formData.get('minStock') as string)
+  const brand = (formData.get('brand') as string).trim()
+  const model = (formData.get('model') as string).trim()
+  const amperage = (formData.get('amperage') as string).trim()
+  const stockToAdd = parseInt(formData.get('stock') as string) || 0
+  const minStock = parseInt(formData.get('minStock') as string) || 5
   const price = parseFloat(formData.get('price') as string)
 
   if (!brand || !model || !price) return
 
   try {
-    await prisma.product.create({
-      data: {
-        brand,
-        model,
-        amperage,
-        stock: stock || 0,
-        minStock: minStock || 5,
-        price,
-      },
+    // Buscar si ya existe un producto con la misma marca, modelo y amperaje
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        brand: { equals: brand, mode: 'insensitive' },
+        model: { equals: model, mode: 'insensitive' },
+        amperage: { equals: amperage, mode: 'insensitive' },
+      }
     })
+
+    if (existingProduct) {
+      // SI EXISTE: Actualizar stock sumando el nuevo y actualizar el precio
+      await prisma.product.update({
+        where: { id: existingProduct.id },
+        data: {
+          stock: { increment: stockToAdd },
+          price: price, // Actualizamos al precio más reciente
+          minStock: minStock,
+        }
+      })
+    } else {
+      // NO EXISTE: Crear nuevo
+      await prisma.product.create({
+        data: {
+          brand,
+          model,
+          amperage,
+          stock: stockToAdd,
+          minStock: minStock,
+          price,
+        },
+      })
+    }
+    
     revalidatePath('/stock')
     revalidatePath('/sales/new')
     revalidatePath('/')
   } catch (error) {
-    console.error('Error creating product:', error)
+    console.error('Error in addProduct (Smart Sum):', error)
   }
 }
 
@@ -238,7 +261,7 @@ export async function deleteSale(saleId: number, password?: string) {
   }
 }
 
-export async function updateProductStock(productId: number, newStock: number, password?: string) {
+export async function updateProductStock(productId: number, newStock: number, newPrice: number, password?: string) {
   // Verificación de contraseña de administrador
   if (password !== 'santino230525') {
     return { success: false, error: 'Contraseña de administrador incorrecta' }
@@ -247,7 +270,10 @@ export async function updateProductStock(productId: number, newStock: number, pa
   try {
     await prisma.product.update({
       where: { id: productId },
-      data: { stock: newStock }
+      data: { 
+        stock: newStock,
+        price: newPrice 
+      }
     })
 
     revalidatePath('/stock')
@@ -256,7 +282,7 @@ export async function updateProductStock(productId: number, newStock: number, pa
     
     return { success: true }
   } catch (error: any) {
-    console.error('Error al actualizar stock:', error)
+    console.error('Error al actualizar producto:', error)
     return { success: false, error: 'Error interno del servidor' }
   }
 }

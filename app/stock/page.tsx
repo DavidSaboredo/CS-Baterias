@@ -115,6 +115,7 @@ export default async function StockPage() {
                             productId={product.id} 
                             productInfo={`${product.brand} ${product.model}`} 
                             currentStock={product.stock} 
+                            currentPrice={product.price}
                           />
                           <DeleteProductForm id={product.id} />
                         </td>
