@@ -115,7 +115,7 @@ export async function addSale(clientId: number, formData: FormData) {
       }
     }
 
-    await prisma.$transaction([
+    const [sale, updatedProduct] = await prisma.$transaction([
       prisma.sale.create({
         data: {
           clientId,
@@ -138,7 +138,12 @@ export async function addSale(clientId: number, formData: FormData) {
     revalidatePath('/sales')
     revalidatePath('/')
     revalidatePath('/sales/new')
-    return { success: true }
+    
+    return { 
+      success: true, 
+      lowStock: updatedProduct.stock <= updatedProduct.minStock,
+      stock: updatedProduct.stock
+    }
   } catch (error: any) {
     console.error('Error creating sale:', error)
     return { success: false, error: error.message }
@@ -192,6 +197,44 @@ export async function deleteProduct(id: number) {
     revalidatePath('/')
   } catch (error) {
     console.error('Error deleting product:', error)
+  }
+}
+
+export async function deleteSale(saleId: number, password?: string) {
+  // Verificación de contraseña de administrador
+  if (password !== 'santino230525') {
+    return { success: false, error: 'Contraseña de administrador incorrecta' }
+  }
+
+  try {
+    const sale = await prisma.sale.findUnique({
+      where: { id: saleId },
+      include: { product: true }
+    })
+
+    if (!sale) {
+      return { success: false, error: 'La venta no existe' }
+    }
+
+    // Usar transacción para borrar la venta y DEVOLVER el stock al producto
+    await prisma.$transaction([
+      prisma.sale.delete({
+        where: { id: saleId }
+      }),
+      prisma.product.update({
+        where: { id: sale.productId },
+        data: { stock: { increment: 1 } }
+      })
+    ])
+
+    revalidatePath('/sales')
+    revalidatePath('/stock')
+    revalidatePath('/')
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error al borrar la venta:', error)
+    return { success: false, error: 'Error interno del servidor' }
   }
 }
 

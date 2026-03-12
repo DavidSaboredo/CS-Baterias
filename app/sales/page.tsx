@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import DeleteSaleButton from '@/app/components/DeleteSaleButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,12 +39,15 @@ export default async function SalesPage() {
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Garantía</th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th scope="col" className="relative px-6 py-3">
+                  <span className="sr-only">Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sales.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     No hay ventas registradas aún.
                   </td>
                 </tr>
@@ -76,6 +80,12 @@ export default async function SalesPage() {
                       }`}>
                         {sale.status === 'active' ? 'Activa' : 'Vencida'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <DeleteSaleButton 
+                        saleId={sale.id} 
+                        saleInfo={`${sale.product.brand} - SN: ${sale.serialNumber}`} 
+                      />
                     </td>
                   </tr>
                 ))

@@ -8,7 +8,7 @@ export default async function Dashboard() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [salesToday, activeWarranties, lowStockProducts, recentSales] = await Promise.all([
+  const [salesToday, activeWarranties, products, recentSales] = await Promise.all([
     prisma.sale.count({
       where: {
         date: {
@@ -21,11 +21,10 @@ export default async function Dashboard() {
         status: 'active',
       },
     }),
-    prisma.product.count({
-      where: {
-        stock: {
-          lte: prisma.product.fields.minStock,
-        },
+    prisma.product.findMany({
+      select: {
+        stock: true,
+        minStock: true,
       },
     }),
     prisma.sale.findMany({
@@ -39,6 +38,8 @@ export default async function Dashboard() {
       },
     }),
   ])
+
+  const lowStockProducts = products.filter(p => p.stock <= p.minStock).length;
 
   return (
     <div className="space-y-8">

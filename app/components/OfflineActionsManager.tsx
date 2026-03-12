@@ -51,6 +51,9 @@ export default function OfflineActionsManager() {
             if (clientId) {
               const result = await addSale(clientId, formData);
               if (result?.success) {
+                if (result.lowStock) {
+                  alert(`¡Atención! El stock del producto bajó del mínimo (${result.stock} restantes)`);
+                }
                 await deletePendingAction(action.id);
               } else {
                 throw new Error(result?.error || 'Error al sincronizar venta');

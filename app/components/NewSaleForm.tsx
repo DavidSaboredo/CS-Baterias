@@ -88,7 +88,18 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
     }
 
     try {
-      await createSale(formData)
+      const result = await addSale(parseInt(formData.get('clientId') as string), formData)
+      
+      if (result?.success) {
+        if (result.lowStock) {
+          alert(`¡Venta realizada! Atención: El stock bajó del mínimo (${result.stock} restantes).`)
+        } else {
+          alert('¡Venta realizada con éxito!')
+        }
+        router.push('/sales')
+      } else {
+        alert('Error al crear la venta: ' + (result?.error || 'Error desconocido'))
+      }
     } catch (error) {
       console.error('Error al crear venta:', error)
       alert('Error al crear la venta. Inténtalo de nuevo.')
