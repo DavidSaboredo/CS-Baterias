@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Client } from '@prisma/client'
 import { addClient, search } from '@/app/actions'
 import DeleteClientForm from '@/app/components/DeleteClientForm'
+import AddClientForm from '@/app/components/AddClientForm'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
@@ -47,26 +48,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Formulario de Alta */}
         <div className="lg:col-span-1">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">Nuevo Cliente</h2>
-            <form action={addClient} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                <input type="text" name="name" required className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="Nombre completo" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                <input type="text" name="phone" className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="+54 9 ..." />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Patente / Matrícula</label>
-                <input type="text" name="licensePlate" className="w-full rounded-md border-gray-300 shadow-sm p-2 border uppercase focus:ring-blue-500 focus:border-blue-500" placeholder="AA123BB" />
-              </div>
-              <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors font-medium shadow-sm">
-                Guardar Cliente
-              </button>
-            </form>
-          </div>
+          <AddClientForm />
         </div>
 
         {/* Lista de Clientes */}

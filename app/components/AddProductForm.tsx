@@ -3,16 +3,31 @@
 import { addProduct } from '@/app/actions';
 import { useRef, useState } from 'react';
 import { Package, PlusCircle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { savePendingAction } from '@/lib/offline-db';
 
 export default function AddProductForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'offline', text: string } | null>(null);
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
     setMessage(null);
     
+    // Check if offline
+    if (!navigator.onLine) {
+      const data = Object.fromEntries(formData.entries());
+      await savePendingAction({
+        type: 'STOCK',
+        data
+      });
+      window.dispatchEvent(new CustomEvent('offline-action-saved'));
+      setMessage({ type: 'offline', text: '¡Stock guardado localmente! Se sincronizará al recuperar internet.' });
+      formRef.current?.reset();
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const result = await addProduct(formData);
       if (result?.success) {
@@ -25,8 +40,8 @@ export default function AddProductForm() {
       setMessage({ type: 'error', text: 'Error de conexión' });
     } finally {
       setIsSubmitting(false);
-      // Ocultar mensaje después de 3 segundos
-      setTimeout(() => setMessage(null), 3000);
+      // Ocultar mensaje después de 5 segundos
+      setTimeout(() => setMessage(null), 5000);
     }
   }
 

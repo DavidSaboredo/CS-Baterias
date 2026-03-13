@@ -28,11 +28,11 @@ export async function logout() {
 }
 
 export async function addClient(formData: FormData) {
-  const name = formData.get('name') as string
-  const phone = formData.get('phone') as string
-  const licensePlate = formData.get('licensePlate') as string
+  const name = (formData.get('name') as string || '').trim()
+  const phone = (formData.get('phone') as string || '').trim()
+  const licensePlate = (formData.get('licensePlate') as string || '').trim()
 
-  if (!name) return
+  if (!name) return { success: false, error: 'Nombre es requerido' }
 
   try {
     await prisma.client.create({
@@ -44,8 +44,13 @@ export async function addClient(formData: FormData) {
     })
     revalidatePath('/clients')
     revalidatePath('/sales/new')
-  } catch (error) {
+    return { success: true }
+  } catch (error: any) {
     console.error('Error creating client:', error)
+    if (error.code === 'P2002') {
+      return { success: false, error: 'Ya existe un cliente con esa patente' }
+    }
+    return { success: false, error: 'Error al guardar el cliente' }
   }
 }
 

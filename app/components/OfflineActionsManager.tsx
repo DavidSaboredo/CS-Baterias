@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 import { getPendingActions, deletePendingAction, PendingAction } from '@/lib/offline-db';
 import { useRouter } from 'next/navigation';
-import { addSale } from '@/app/actions';
+import { addSale, addProduct, addClient } from '@/app/actions';
 
 export default function OfflineActionsManager() {
   const [pendingCount, setPendingCount] = useState(0);
@@ -58,6 +58,28 @@ export default function OfflineActionsManager() {
               } else {
                 throw new Error(result?.error || 'Error al sincronizar venta');
               }
+            }
+          } else if (action.type === 'STOCK') {
+            const formData = new FormData();
+            Object.entries(action.data).forEach(([key, value]) => {
+              formData.append(key, value as string);
+            });
+            const result = await addProduct(formData);
+            if (result?.success) {
+              await deletePendingAction(action.id);
+            } else {
+              throw new Error(result?.error || 'Error al sincronizar stock');
+            }
+          } else if (action.type === 'CLIENT') {
+            const formData = new FormData();
+            Object.entries(action.data).forEach(([key, value]) => {
+              formData.append(key, value as string);
+            });
+            const result = await addClient(formData);
+            if (result?.success) {
+              await deletePendingAction(action.id);
+            } else {
+              throw new Error(result?.error || 'Error al sincronizar cliente');
             }
           }
           // Add other action types here as we implement them
