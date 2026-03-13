@@ -47,24 +47,24 @@ export default function ClientLayout({
         <div className="flex-1 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 w-full">
           {children}
         </div>
-        <footer className="py-8 px-6 flex flex-col items-center justify-center text-center border-t border-gray-100 bg-white/50 backdrop-blur-sm mt-auto">
-          {/* Logo / Title with Gradient - More Compact */}
-          <h2 className="text-xl font-black bg-gradient-to-r from-red-600 to-gray-800 bg-clip-text text-transparent mb-3 tracking-tight uppercase">
+        <footer className="py-4 px-6 flex flex-col items-center justify-center text-center border-t border-gray-100 bg-white/50 backdrop-blur-sm mt-auto">
+          {/* Logo / Title with Gradient - Minimalist */}
+          <h2 className="text-lg font-black bg-gradient-to-r from-red-600 to-gray-800 bg-clip-text text-transparent mb-2 tracking-tight uppercase">
             CS Audio Baterías
           </h2>
           
-          {/* Thin Compact Divider */}
-          <div className="w-12 h-0.5 bg-gradient-to-r from-red-600 to-gray-300 rounded-full mb-6 opacity-40"></div>
+          {/* Micro Divider */}
+          <div className="w-8 h-0.5 bg-gradient-to-r from-red-600 to-gray-300 rounded-full mb-3 opacity-30"></div>
           
-          <div className="space-y-1 text-gray-500 font-medium">
-            <p className="text-xs sm:text-sm">
-              Copyright © {new Date().getFullYear()} <span className="text-gray-900 font-bold">Salvador</span>.
+          <div className="space-y-0.5 text-gray-500 font-medium">
+            <p className="text-[10px] sm:text-xs">
+              Copyright © {new Date().getFullYear()} <span className="text-gray-900 font-bold tracking-wide">Laruzo</span>.
             </p>
-            <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-60">
+            <p className="text-[9px] uppercase tracking-[0.3em] opacity-50">
               Todos los derechos reservados.
             </p>
-            <p className="text-xs pt-3 text-gray-400 italic">
-              Diseño y desarrollo por <span className="text-red-600 font-semibold">Salvador</span>
+            <p className="text-[10px] pt-2 text-gray-400">
+              Diseño y desarrollo por <span className="text-red-600 font-bold hover:text-red-700 transition-colors cursor-default">Laruzo</span>
             </p>
           </div>
         </footer>
