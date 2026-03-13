@@ -47,24 +47,24 @@ export default function ClientLayout({
         <div className="flex-1 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 w-full">
           {children}
         </div>
-        <footer className="py-12 px-6 flex flex-col items-center justify-center text-center">
-          {/* Logo / Title with Gradient */}
-          <h2 className="text-2xl font-black bg-gradient-to-r from-red-600 to-gray-900 bg-clip-text text-transparent mb-4 tracking-tight uppercase">
+        <footer className="py-8 px-6 flex flex-col items-center justify-center text-center border-t border-gray-100 bg-white/50 backdrop-blur-sm mt-auto">
+          {/* Logo / Title with Gradient - More Compact */}
+          <h2 className="text-xl font-black bg-gradient-to-r from-red-600 to-gray-800 bg-clip-text text-transparent mb-3 tracking-tight uppercase">
             CS Audio Baterías
           </h2>
           
-          {/* Gradient Divider */}
-          <div className="w-16 h-1 bg-gradient-to-r from-red-600 to-gray-400 rounded-full mb-8 opacity-50"></div>
+          {/* Thin Compact Divider */}
+          <div className="w-12 h-0.5 bg-gradient-to-r from-red-600 to-gray-300 rounded-full mb-6 opacity-40"></div>
           
-          <div className="space-y-1 text-gray-400 font-medium">
-            <p className="text-sm">
-              Copyright © {new Date().getFullYear()} CS Audio Baterías.
+          <div className="space-y-1 text-gray-500 font-medium">
+            <p className="text-xs sm:text-sm">
+              Copyright © {new Date().getFullYear()} <span className="text-gray-900 font-bold">Salvador</span>.
             </p>
-            <p className="text-xs uppercase tracking-widest opacity-70">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-60">
               Todos los derechos reservados.
             </p>
-            <p className="text-sm pt-4">
-              Diseñado por <span className="text-red-600 font-bold hover:text-red-700 transition-colors">Laruzo</span>
+            <p className="text-xs pt-3 text-gray-400 italic">
+              Diseño y desarrollo por <span className="text-red-600 font-semibold">Salvador</span>
             </p>
           </div>
         </footer>
