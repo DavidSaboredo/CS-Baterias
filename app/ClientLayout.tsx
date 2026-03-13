@@ -47,8 +47,26 @@ export default function ClientLayout({
         <div className="flex-1 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 w-full">
           {children}
         </div>
-        <footer className="py-6 text-center text-gray-500 text-sm font-medium">
-          <p>© {new Date().getFullYear()} Laruzo. Todos los derechos reservados.</p>
+        <footer className="py-12 px-6 flex flex-col items-center justify-center text-center">
+          {/* Logo / Title with Gradient */}
+          <h2 className="text-2xl font-black bg-gradient-to-r from-red-600 to-gray-900 bg-clip-text text-transparent mb-4 tracking-tight uppercase">
+            CS Audio Baterías
+          </h2>
+          
+          {/* Gradient Divider */}
+          <div className="w-16 h-1 bg-gradient-to-r from-red-600 to-gray-400 rounded-full mb-8 opacity-50"></div>
+          
+          <div className="space-y-1 text-gray-400 font-medium">
+            <p className="text-sm">
+              Copyright © {new Date().getFullYear()} CS Audio Baterías.
+            </p>
+            <p className="text-xs uppercase tracking-widest opacity-70">
+              Todos los derechos reservados.
+            </p>
+            <p className="text-sm pt-4">
+              Diseñado por <span className="text-red-600 font-bold hover:text-red-700 transition-colors">Laruzo</span>
+            </p>
+          </div>
         </footer>
       </main>
     </div>
