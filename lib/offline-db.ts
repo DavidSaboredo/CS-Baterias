@@ -5,7 +5,7 @@ const STORE_NAME = 'pending-actions';
 
 export interface PendingAction {
   id: string;
-  type: 'SALE' | 'STOCK' | 'WORKSHOP';
+  type: 'SALE' | 'STOCK' | 'WORKSHOP' | 'CLIENT';
   data: any;
   timestamp: number;
 }
