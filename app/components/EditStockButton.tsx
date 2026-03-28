@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Edit2, X, Check, Lock, Package } from 'lucide-react'
+import { Edit2, X, Check, Lock, Package, Upload } from 'lucide-react'
 import { updateProductStock } from '@/app/actions'
 
 interface EditStockButtonProps {
@@ -26,6 +26,7 @@ export default function EditStockButton({
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageFromFile, setNewImageFromFile] = useState('')
   const [removeImage, setRemoveImage] = useState(false)
+  const [selectedFileName, setSelectedFileName] = useState('')
   const [password, setPassword] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +38,7 @@ export default function EditStockButton({
 
     if (!file) {
       setNewImageFromFile('')
+      setSelectedFileName('')
       return
     }
 
@@ -44,6 +46,7 @@ export default function EditStockButton({
       setError('El archivo debe ser una imagen válida')
       event.target.value = ''
       setNewImageFromFile('')
+      setSelectedFileName('')
       return
     }
 
@@ -56,10 +59,12 @@ export default function EditStockButton({
       })
 
       setNewImageFromFile(dataUrl)
+      setSelectedFileName(file.name)
       setRemoveImage(false)
       setError(null)
     } catch {
       setError('No se pudo procesar la imagen')
+      setSelectedFileName('')
     }
   }
 
@@ -84,6 +89,7 @@ export default function EditStockButton({
         setPassword('')
         setNewImageUrl('')
         setNewImageFromFile('')
+        setSelectedFileName('')
         setRemoveImage(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
       } else {
@@ -168,13 +174,22 @@ export default function EditStockButton({
                 placeholder="https://..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
               />
+              <div
+                className="w-full px-4 py-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 hover:bg-blue-50 hover:border-blue-400 cursor-pointer flex items-center gap-3 transition-all"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <span className={`text-sm truncate ${selectedFileName ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+                  {selectedFileName || 'Subir foto o imagen desde archivo...'}
+                </span>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 onChange={handleImageFileChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm"
+                className="hidden"
               />
 
               {resolvedImageUrl && (
@@ -192,6 +207,7 @@ export default function EditStockButton({
                     if (e.target.checked) {
                       setNewImageUrl('')
                       setNewImageFromFile('')
+                      setSelectedFileName('')
                       if (fileInputRef.current) fileInputRef.current.value = ''
                     }
                   }}
@@ -234,6 +250,7 @@ export default function EditStockButton({
                   setNewPrice(currentPrice.toString())
                   setNewImageUrl('')
                   setNewImageFromFile('')
+                  setSelectedFileName('')
                   setRemoveImage(false)
                   if (fileInputRef.current) fileInputRef.current.value = ''
                 }}

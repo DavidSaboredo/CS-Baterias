@@ -2,7 +2,7 @@
 
 import { addProduct } from '@/app/actions';
 import { useRef, useState } from 'react';
-import { Package, PlusCircle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Package, PlusCircle, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 import { savePendingAction } from '@/lib/offline-db';
 
 export default function AddProductForm() {
@@ -12,6 +12,7 @@ export default function AddProductForm() {
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'offline', text: string } | null>(null);
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [imageFromFile, setImageFromFile] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');
 
   const resolvedImageUrl = (imageFromFile || imageUrlInput).trim();
 
@@ -20,6 +21,7 @@ export default function AddProductForm() {
 
     if (!file) {
       setImageFromFile('');
+      setSelectedFileName('');
       return;
     }
 
@@ -27,6 +29,7 @@ export default function AddProductForm() {
       setMessage({ type: 'error', text: 'El archivo debe ser una imagen válida.' });
       event.target.value = '';
       setImageFromFile('');
+      setSelectedFileName('');
       return;
     }
 
@@ -39,6 +42,7 @@ export default function AddProductForm() {
       });
 
       setImageFromFile(dataUrl);
+      setSelectedFileName(file.name);
       setMessage({ type: 'success', text: 'Imagen cargada desde archivo. Se guardará para la web pública.' });
       setTimeout(() => setMessage(null), 4000);
     } catch {
@@ -71,6 +75,7 @@ export default function AddProductForm() {
         formRef.current?.reset();
         setImageUrlInput('');
         setImageFromFile('');
+        setSelectedFileName('');
         if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
         setMessage({ type: 'error', text: result?.error || 'Error al guardar el producto' });
@@ -145,13 +150,22 @@ export default function AddProductForm() {
             className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
             placeholder="https://..."
           />
+          <div
+            className="w-full px-4 py-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 hover:bg-blue-50 hover:border-blue-400 cursor-pointer flex items-center gap-3 transition-all"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <span className={`text-sm truncate ${selectedFileName ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+              {selectedFileName || 'Subir foto o imagen desde archivo...'}
+            </span>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             capture="environment"
             onChange={handleImageFileChange}
-            className="mt-2 w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+            className="hidden"
           />
           {imageFromFile && (
             <p className="mt-1 text-xs text-green-700">
