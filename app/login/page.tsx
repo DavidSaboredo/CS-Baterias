@@ -1,6 +1,12 @@
 import { login } from '@/app/actions'
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-900">
       {/* Background Image */}
@@ -31,6 +37,12 @@ export default function LoginPage() {
         </div>
         
         <form action={login} className="space-y-6">
+          {error === 'true' && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Usuario o contraseña incorrectos.
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Usuario

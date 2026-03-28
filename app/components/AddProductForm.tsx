@@ -7,8 +7,44 @@ import { savePendingAction } from '@/lib/offline-db';
 
 export default function AddProductForm() {
   const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'offline', text: string } | null>(null);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [imageFromFile, setImageFromFile] = useState('');
+
+  const resolvedImageUrl = (imageFromFile || imageUrlInput).trim();
+
+  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setImageFromFile('');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'El archivo debe ser una imagen válida.' });
+      event.target.value = '';
+      setImageFromFile('');
+      return;
+    }
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+        reader.readAsDataURL(file);
+      });
+
+      setImageFromFile(dataUrl);
+      setMessage({ type: 'success', text: 'Imagen cargada desde archivo. Se guardará para la web pública.' });
+      setTimeout(() => setMessage(null), 4000);
+    } catch {
+      setMessage({ type: 'error', text: 'No se pudo procesar la imagen seleccionada.' });
+    }
+  };
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
@@ -33,6 +69,9 @@ export default function AddProductForm() {
       if (result?.success) {
         setMessage({ type: 'success', text: '¡Producto guardado correctamente!' });
         formRef.current?.reset();
+        setImageUrlInput('');
+        setImageFromFile('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
         setMessage({ type: 'error', text: result?.error || 'Error al guardar el producto' });
       }
@@ -89,6 +128,39 @@ export default function AddProductForm() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
             <input type="number" name="minStock" defaultValue={5} className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Imagen (opcional)</label>
+          <input
+            type="hidden"
+            name="imageUrl"
+            value={resolvedImageUrl}
+            readOnly
+          />
+          <input
+            type="url"
+            value={imageUrlInput}
+            onChange={(e) => setImageUrlInput(e.target.value)}
+            className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+            placeholder="https://..."
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleImageFileChange}
+            className="mt-2 w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+          />
+          {imageFromFile && (
+            <p className="mt-1 text-xs text-green-700">
+              Imagen de archivo lista. Si también cargás URL, se usará la imagen de archivo.
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Podés pegar una URL o sacar/subir una foto desde el celular. Esta web no la muestra, pero queda disponible para la API y la web pública.
+          </p>
         </div>
 
         <button 

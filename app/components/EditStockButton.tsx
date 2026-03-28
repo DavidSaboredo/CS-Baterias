@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Edit2, X, Check, Lock, Package } from 'lucide-react'
 import { updateProductStock } from '@/app/actions'
 
@@ -9,15 +9,59 @@ interface EditStockButtonProps {
   productInfo: string
   currentStock: number
   currentPrice: number
+  currentImageUrl?: string | null
 }
 
-export default function EditStockButton({ productId, productInfo, currentStock, currentPrice }: EditStockButtonProps) {
+export default function EditStockButton({
+  productId,
+  productInfo,
+  currentStock,
+  currentPrice,
+  currentImageUrl,
+}: EditStockButtonProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [newStock, setNewStock] = useState(currentStock.toString())
   const [newPrice, setNewPrice] = useState(currentPrice.toString())
+  const [newImageUrl, setNewImageUrl] = useState('')
+  const [newImageFromFile, setNewImageFromFile] = useState('')
+  const [removeImage, setRemoveImage] = useState(false)
   const [password, setPassword] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const resolvedImageUrl = (newImageFromFile || newImageUrl).trim()
+
+  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+      setNewImageFromFile('')
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('El archivo debe ser una imagen válida')
+      event.target.value = ''
+      setNewImageFromFile('')
+      return
+    }
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result || ''))
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
+        reader.readAsDataURL(file)
+      })
+
+      setNewImageFromFile(dataUrl)
+      setRemoveImage(false)
+      setError(null)
+    } catch {
+      setError('No se pudo procesar la imagen')
+    }
+  }
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,11 +75,17 @@ export default function EditStockButton({ productId, productInfo, currentStock, 
         productId, 
         parseInt(newStock), 
         parseFloat(newPrice), 
-        password
+        password,
+        resolvedImageUrl || null,
+        removeImage,
       )
       if (result.success) {
         setIsOpen(false)
         setPassword('')
+        setNewImageUrl('')
+        setNewImageFromFile('')
+        setRemoveImage(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
       } else {
         setError(result.error || 'Error al actualizar')
       }
@@ -101,6 +151,56 @@ export default function EditStockButton({ productId, productInfo, currentStock, 
               </div>
             </div>
 
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">Imagen de producto (opcional)</label>
+              {currentImageUrl && !removeImage && !resolvedImageUrl && (
+                <p className="text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                  Este producto ya tiene imagen cargada.
+                </p>
+              )}
+              <input
+                type="url"
+                value={newImageUrl}
+                onChange={(e) => {
+                  setNewImageUrl(e.target.value)
+                  if (e.target.value) setRemoveImage(false)
+                }}
+                placeholder="https://..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageFileChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm"
+              />
+
+              {resolvedImageUrl && (
+                <p className="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                  Imagen nueva lista para guardar.
+                </p>
+              )}
+
+              <label className="inline-flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={removeImage}
+                  onChange={(e) => {
+                    setRemoveImage(e.target.checked)
+                    if (e.target.checked) {
+                      setNewImageUrl('')
+                      setNewImageFromFile('')
+                      if (fileInputRef.current) fileInputRef.current.value = ''
+                    }
+                  }}
+                  className="rounded border-gray-300"
+                />
+                Quitar imagen actual
+              </label>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1 ml-1">Confirmar Identidad</label>
               <div className="relative">
@@ -131,6 +231,11 @@ export default function EditStockButton({ productId, productInfo, currentStock, 
                   setError(null)
                   setPassword('')
                   setNewStock(currentStock.toString())
+                  setNewPrice(currentPrice.toString())
+                  setNewImageUrl('')
+                  setNewImageFromFile('')
+                  setRemoveImage(false)
+                  if (fileInputRef.current) fileInputRef.current.value = ''
                 }}
                 className="flex-1 px-4 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition-colors"
               >

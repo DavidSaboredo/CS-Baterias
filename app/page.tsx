@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ArrowUpRight, AlertTriangle, CheckCircle, Package, Users, ShoppingCart } from 'lucide-react'
+import { ArrowUpRight, AlertTriangle, CheckCircle, Package, Users, ShoppingCart, CalendarClock } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -7,8 +7,10 @@ export const dynamic = 'force-dynamic'
 export default async function Dashboard() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const endOfToday = new Date(today)
+  endOfToday.setDate(endOfToday.getDate() + 1)
 
-  const [salesToday, activeWarranties, products, recentSales] = await Promise.all([
+  const [salesToday, activeWarranties, products, recentSales, appointmentsToday] = await Promise.all([
     prisma.sale.count({
       where: {
         date: {
@@ -23,9 +25,16 @@ export default async function Dashboard() {
     }),
     prisma.product.findMany({
       select: {
+        id: true,
+        brand: true,
+        model: true,
         stock: true,
         minStock: true,
       },
+      orderBy: [
+        { stock: 'asc' },
+        { brand: 'asc' },
+      ],
     }),
     prisma.sale.findMany({
       take: 5,
@@ -37,9 +46,25 @@ export default async function Dashboard() {
         product: true,
       },
     }),
+    prisma.appointment.findMany({
+      where: {
+        startTime: {
+          gte: today,
+          lt: endOfToday,
+        },
+      },
+      include: {
+        client: true,
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    }),
   ])
 
-  const lowStockProducts = products.filter(p => p.stock <= p.minStock).length;
+  const lowStockProducts = products.filter((p) => p.stock <= p.minStock)
+  const lowStockCount = lowStockProducts.length
+  const alertPreview = lowStockProducts.slice(0, 4)
 
   return (
     <div className="space-y-8">
@@ -54,52 +79,143 @@ export default async function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Ventas Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-start">
+        <div className="bg-gradient-to-br from-green-50 to-white p-6 rounded-2xl shadow-sm border border-green-100 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start gap-3">
             <div>
-              <p className="text-sm font-medium text-gray-500">Ventas Hoy</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-green-700">Ventas Hoy</p>
               <h3 className="text-3xl font-bold text-gray-900 mt-2">{salesToday}</h3>
             </div>
-            <div className="p-2 bg-green-50 rounded-lg">
+            <div className="p-2.5 bg-white rounded-xl border border-green-100 shadow-sm">
               <ArrowUpRight className="w-5 h-5 text-green-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-green-600">
-            <span>Registradas hoy</span>
+          <div className="mt-4 inline-flex items-center text-xs font-medium text-green-700 bg-green-100/70 px-2.5 py-1 rounded-full">
+            Registradas hoy
           </div>
         </div>
 
         {/* Garantías Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-start">
+        <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl shadow-sm border border-blue-100 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start gap-3">
             <div>
-              <p className="text-sm font-medium text-gray-500">Garantías Activas</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Garantías Activas</p>
               <h3 className="text-3xl font-bold text-gray-900 mt-2">{activeWarranties}</h3>
             </div>
-            <div className="p-2 bg-blue-50 rounded-lg">
+            <div className="p-2.5 bg-white rounded-xl border border-blue-100 shadow-sm">
               <CheckCircle className="w-5 h-5 text-blue-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-gray-500">
-            <span>Total registradas</span>
+          <div className="mt-4 inline-flex items-center text-xs font-medium text-blue-700 bg-blue-100/70 px-2.5 py-1 rounded-full">
+            Total registradas
           </div>
         </div>
 
         {/* Alertas Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-start">
+        <div className={`p-6 rounded-2xl shadow-sm border hover:shadow-md transition-shadow ${
+          lowStockCount > 0
+            ? 'bg-gradient-to-br from-red-50 to-white border-red-100'
+            : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
+        }`}>
+          <div className="flex justify-between items-start gap-3">
             <div>
-              <p className="text-sm font-medium text-gray-500">Alertas Stock</p>
-              <h3 className={`text-3xl font-bold mt-2 ${lowStockProducts > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                {lowStockProducts}
+              <p className={`text-xs font-semibold uppercase tracking-wide ${lowStockCount > 0 ? 'text-red-700' : 'text-gray-600'}`}>
+                Alertas Stock
+              </p>
+              <h3 className={`text-3xl font-bold mt-2 ${lowStockCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                {lowStockCount}
               </h3>
             </div>
-            <div className="p-2 bg-red-50 rounded-lg">
+            <div className={`p-2.5 bg-white rounded-xl border shadow-sm ${lowStockCount > 0 ? 'border-red-100' : 'border-gray-200'}`}>
               <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-red-600">
-            <span>Productos bajo mínimo</span>
+          <div className={`mt-4 inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
+            lowStockCount > 0
+              ? 'text-red-700 bg-red-100/80'
+              : 'text-gray-600 bg-gray-100'
+          }`}>
+            {lowStockCount > 0 ? 'Productos bajo mínimo' : 'Sin alertas de stock'}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50/70 to-white">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Turnos de Hoy</h2>
+            </div>
+            <Link href="/appointments" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              Ver agenda
+            </Link>
+          </div>
+          <div className="p-6 space-y-3">
+            {appointmentsToday.length === 0 ? (
+              <p className="text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                No hay turnos cargados para hoy.
+              </p>
+            ) : (
+              appointmentsToday.map((appointment) => (
+                <div key={appointment.id} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 hover:bg-blue-50/40 transition-colors">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-gray-900">{appointment.client.name}</p>
+                    <p className="text-sm text-gray-600">
+                      {new Date(appointment.startTime).toLocaleTimeString('es-AR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      {' - '}
+                      {new Date(appointment.endTime).toLocaleTimeString('es-AR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">{appointment.reason}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-red-50/70 to-white">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Alerta de Stock Bajo</h2>
+            </div>
+            <Link href="/stock" className="text-sm text-red-600 hover:text-red-700 font-medium">
+              Gestionar stock
+            </Link>
+          </div>
+          <div className="p-6 space-y-3">
+            {lowStockCount === 0 ? (
+              <p className="text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                No hay productos bajo mínimo.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-red-700 font-medium">{lowStockCount} alertas:</p>
+                {alertPreview.map((product) => (
+                  <div key={product.id} className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 hover:bg-red-100/60 transition-colors">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium text-red-900">
+                        {product.brand} {product.model}
+                      </p>
+                      <p className="text-sm font-semibold text-red-700">
+                        {product.stock}/{product.minStock}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {lowStockCount > alertPreview.length && (
+                  <p className="text-xs text-gray-500">
+                    Mostrando {alertPreview.length} de {lowStockCount} alertas.
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -107,8 +223,8 @@ export default async function Dashboard() {
       {/* Recent Sales & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Sales Table */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
             <h2 className="text-lg font-semibold text-gray-900">Ventas Recientes</h2>
             <Link href="/sales" className="text-sm text-red-600 hover:text-red-700 font-medium">
               Ver todas
@@ -161,12 +277,12 @@ export default async function Dashboard() {
         </div>
 
         {/* Quick Action: New Sale */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
           <div className="space-y-4">
             <Link 
               href="/sales/new" 
-              className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+              className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-green-50 hover:border-green-100 transition-colors group"
             >
               <div className="p-3 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
                 <ShoppingCart className="w-6 h-6 text-green-600" />
@@ -179,7 +295,7 @@ export default async function Dashboard() {
 
             <Link 
               href="/clients" 
-              className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+              className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-blue-50 hover:border-blue-100 transition-colors group"
             >
               <div className="p-3 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
                 <Users className="w-6 h-6 text-blue-600" />
@@ -192,10 +308,10 @@ export default async function Dashboard() {
 
             <Link 
               href="/stock" 
-              className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+              className="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-amber-50 hover:border-amber-100 transition-colors group"
             >
               <div className="p-3 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
-                <Package className="w-6 h-6 text-purple-600" />
+                <Package className="w-6 h-6 text-amber-600" />
               </div>
               <div className="ml-4">
                 <p className="font-medium text-gray-900">Gestionar Stock</p>

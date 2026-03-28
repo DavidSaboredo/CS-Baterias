@@ -6,10 +6,13 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 
 export async function login(formData: FormData) {
-  const username = formData.get('username') as string
-  const password = formData.get('password') as string
+  const username = (formData.get('username') as string || '').trim().toLowerCase()
+  const password = (formData.get('password') as string || '').trim()
 
-  if (username === 'salvador' && password === 'santino230525') {
+  const validUsername = (process.env.AUTH_USERNAME || 'salvador').trim().toLowerCase()
+  const validPassword = (process.env.AUTH_PASSWORD || 'santino230525').trim()
+
+  if (username === validUsername && password === validPassword) {
     (await cookies()).set('auth_session', 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -167,6 +170,7 @@ export async function addProduct(formData: FormData) {
   const brand = (formData.get('brand') as string || '').trim()
   const model = (formData.get('model') as string || '').trim()
   const amperage = (formData.get('amperage') as string || '').trim()
+  const imageUrl = (formData.get('imageUrl') as string || '').trim()
   const stockToAdd = parseInt(formData.get('stock') as string) || 0
   const minStock = parseInt(formData.get('minStock') as string) || 5
   const price = parseFloat(formData.get('price') as string) || 0
@@ -191,6 +195,7 @@ export async function addProduct(formData: FormData) {
           stock: { increment: stockToAdd },
           price: price, // Actualizamos al precio más reciente
           minStock: minStock,
+          ...(imageUrl ? { imageUrl } : {}),
         }
       })
     } else {
@@ -200,6 +205,7 @@ export async function addProduct(formData: FormData) {
           brand,
           model,
           amperage,
+          imageUrl: imageUrl || null,
           stock: stockToAdd,
           minStock: minStock,
           price,
@@ -268,18 +274,32 @@ export async function deleteSale(saleId: number, password?: string) {
   }
 }
 
-export async function updateProductStock(productId: number, newStock: number, newPrice: number, password?: string) {
+export async function updateProductStock(
+  productId: number,
+  newStock: number,
+  newPrice: number,
+  password?: string,
+  newImageUrl?: string | null,
+  removeImage?: boolean,
+) {
   // Verificación de contraseña de administrador
   if (password !== 'santino230525') {
     return { success: false, error: 'Contraseña de administrador incorrecta' }
   }
 
   try {
+    const normalizedImageUrl = (newImageUrl || '').trim()
+
     await prisma.product.update({
       where: { id: productId },
       data: { 
         stock: newStock,
-        price: newPrice 
+        price: newPrice,
+        ...(removeImage
+          ? { imageUrl: null }
+          : normalizedImageUrl
+            ? { imageUrl: normalizedImageUrl }
+            : {}),
       }
     })
 
@@ -290,6 +310,59 @@ export async function updateProductStock(productId: number, newStock: number, ne
     return { success: true }
   } catch (error: any) {
     console.error('Error al actualizar producto:', error)
+    return { success: false, error: 'Error interno del servidor' }
+  }
+}
+
+export async function updateAllProductPricesByPercentage(percentage: number, password?: string) {
+  if (password !== 'santino230525') {
+    return { success: false, error: 'Contraseña de administrador incorrecta' }
+  }
+
+  if (!Number.isFinite(percentage) || percentage === 0) {
+    return { success: false, error: 'Ingresá un porcentaje válido distinto de 0' }
+  }
+
+  const multiplier = 1 + percentage / 100
+
+  if (multiplier <= 0) {
+    return { success: false, error: 'La baja no puede dejar precios en 0 o negativo' }
+  }
+
+  try {
+    const products = await prisma.product.findMany({
+      select: {
+        id: true,
+        price: true,
+      },
+    })
+
+    if (products.length === 0) {
+      return { success: false, error: 'No hay productos para actualizar' }
+    }
+
+    await prisma.$transaction(
+      products.map((product) =>
+        prisma.product.update({
+          where: { id: product.id },
+          data: {
+            price: Number((product.price * multiplier).toFixed(2)),
+          },
+        }),
+      ),
+    )
+
+    revalidatePath('/stock')
+    revalidatePath('/sales/new')
+    revalidatePath('/')
+
+    return {
+      success: true,
+      updatedCount: products.length,
+      percentage,
+    }
+  } catch (error: any) {
+    console.error('Error al actualizar precios globalmente:', error)
     return { success: false, error: 'Error interno del servidor' }
   }
 }
