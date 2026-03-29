@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, ShoppingCart, Package, FileText, LogOut, Wrench, Calendar } from 'lucide-react'
+import { LayoutDashboard, Users, ShoppingCart, Package, FileText, LogOut, Wrench, Calendar, TrendingDown } from 'lucide-react'
 import { logout } from '@/app/actions'
 
 const navigation = [
@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Ventas', href: '/sales', icon: ShoppingCart },
   { name: 'Stock', href: '/stock', icon: Package },
   { name: 'Servicios', href: '/workshop', icon: Wrench },
+  { name: 'Monitor de Precios', href: '/admin/price-monitor', icon: TrendingDown },
   { name: 'Reportes', href: '/reports', icon: FileText },
 ]
 

@@ -58,4 +58,35 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   sales     Sale[]
+  competitorPrices CompetitorPrice[]
+}
+
+model ScraperSource {
+  id                    Int      @id @default(autoincrement())
+  name                  String
+  url                   String
+  priceSelector         String
+  availabilitySelector  String?
+  active                Boolean  @default(true)
+  lastFetchedAt         DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  competitorPrices      CompetitorPrice[]
+}
+
+model CompetitorPrice {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sourceId      Int
+  source        ScraperSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  price         Float
+  availability  Boolean?
+  fetchedAt     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@index([sourceId])
+  @@index([fetchedAt])
 }

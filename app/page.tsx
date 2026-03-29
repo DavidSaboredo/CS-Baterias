@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ArrowUpRight, AlertTriangle, CheckCircle, Package, Users, ShoppingCart, CalendarClock } from 'lucide-react'
+import { ArrowUpRight, AlertTriangle, CheckCircle, Package, Users, ShoppingCart, CalendarClock, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -323,4 +323,33 @@ export default async function Dashboard() {
       </div>
     </div>
   )
+      {/* Widget de Alertas de Precios - Solo visible si hay variación >15% */}
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 bg-gradient-to-r from-orange-50/70 to-white overflow-hidden">
+        <div className="p-6 border-b border-orange-100 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <TrendingDown className="w-5 h-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Monitor de Precios</h2>
+          </div>
+          <Link href="/admin/price-monitor" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+            Ver detalles
+          </Link>
+        </div>
+        <div className="p-6">
+          <p className="text-sm text-gray-600 mb-4">
+            Sistema de monitoreo de precios con competencia. Analiza variaciones mayores al 15% de nuestros precios.
+          </p>
+          <div className="flex items-center gap-3 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-900">Sistema activo y listo</p>
+              <p className="text-xs text-blue-700 mt-1">Agrega fuentes en el Monitor de Precios para comenzar</p>
+            </div>
+            <Link 
+              href="/admin/price-monitor" 
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors whitespace-nowrap"
+            >
+              Configurar →
+            </Link>
+          </div>
+        </div>
+      </div>
 }
