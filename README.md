@@ -49,6 +49,7 @@ La aplicación expone una API REST de solo lectura para consumir el stock desde 
 
 - `GET /api/public/products`: listado paginado de productos.
 - `GET /api/public/products/:id`: detalle de un producto.
+- `POST /api/orders`: crea pedido, descuenta stock real y registra ventas.
 
 ### Query params disponibles
 
@@ -99,6 +100,33 @@ curl "http://localhost:3000/api/public/products?available=true&search=moura" \
 curl "http://localhost:3000/api/public/products/1" \
    -H "Authorization: Bearer tu_clave_segura"
 ```
+
+### Crear pedido y descontar stock
+
+El endpoint `POST /api/orders` valida stock, descuenta en base de datos y registra una venta por unidad dentro de una transaccion.
+
+Ejemplo:
+
+```bash
+curl -X POST "http://localhost:3000/api/orders" \
+   -H "Content-Type: application/json" \
+   -H "x-api-key: tu_clave_segura" \
+   -d '{
+      "customer": {
+         "name": "Juan Perez",
+         "phone": "3442462463",
+         "zone": "Gualeguaychu",
+         "delivery": "Retiro en local",
+         "notes": "Cliente web"
+      },
+      "items": [
+         { "productId": 51, "quantity": 2 },
+         { "productId": 63, "quantity": 1 }
+      ]
+   }'
+```
+
+Si falta stock, responde `409` con `code: INSUFFICIENT_STOCK` y detalle de productos afectados.
 
 ## Base de datos en Vercel
 

@@ -16,7 +16,10 @@ function getAllowedOrigins() {
     .filter(Boolean)
 }
 
-export function getCorsHeaders(request: NextRequest) {
+export function getCorsHeaders(
+  request: NextRequest,
+  allowedMethods: string = 'GET,OPTIONS',
+) {
   const requestOrigin = request.headers.get('origin')
   const allowedOrigins = getAllowedOrigins()
   const allowAnyOrigin = allowedOrigins.includes('*')
@@ -28,7 +31,7 @@ export function getCorsHeaders(request: NextRequest) {
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Methods': 'GET,OPTIONS',
+    'Access-Control-Allow-Methods': allowedMethods,
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
     'Access-Control-Max-Age': '86400',
     'Cache-Control': 'no-store',
@@ -36,20 +39,28 @@ export function getCorsHeaders(request: NextRequest) {
   }
 }
 
-export function jsonResponse(request: NextRequest, body: unknown, init?: ResponseInit) {
+export function jsonResponse(
+  request: NextRequest,
+  body: unknown,
+  init?: ResponseInit,
+  allowedMethods: string = 'GET,OPTIONS',
+) {
   return NextResponse.json(body, {
     ...init,
     headers: {
-      ...getCorsHeaders(request),
+      ...getCorsHeaders(request, allowedMethods),
       ...(init?.headers || {}),
     },
   })
 }
 
-export function handleOptions(request: NextRequest) {
+export function handleOptions(
+  request: NextRequest,
+  allowedMethods: string = 'GET,OPTIONS',
+) {
   return new NextResponse(null, {
     status: 204,
-    headers: getCorsHeaders(request),
+    headers: getCorsHeaders(request, allowedMethods),
   })
 }
 
