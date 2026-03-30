@@ -66,6 +66,12 @@ El acceso está protegido. Las credenciales por defecto son:
    - Si no existe, crea producto nuevo.
    - No rompe APIs públicas existentes.
 
+### 4) Ajustes mobile y unificación del buscador en ventas
+
+- Se corrigió el desborde en mobile en la pantalla de nueva venta (sección cliente), adaptando layout y ancho de botón para pantallas chicas.
+- Se implementó el mismo buscador remoto de productos en la sección de ventas dentro del detalle de cliente.
+- Resultado: experiencia consistente de búsqueda de productos tanto en `/sales/new` como en `/clients/:id`.
+
 ### Estado del contrato de integración e-commerce
 
 Se mantuvo sin cambios en estructura/autenticación:

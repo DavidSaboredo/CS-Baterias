@@ -102,16 +102,16 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow">
       
       {/* Paso 1: Cliente */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">1. Seleccionar Cliente</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <select 
             name="clientId" 
             required 
-            className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
+            className="w-full sm:flex-1 min-w-0 rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">Buscar cliente...</option>
             {clients.map(client => (
@@ -120,8 +120,8 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
               </option>
             ))}
           </select>
-          <Link href="/clients" className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 flex items-center">
-            + Nuevo
+          <Link href="/clients" className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 flex items-center justify-center whitespace-nowrap">
+            Agregar nuevo cliente
           </Link>
         </div>
       </div>

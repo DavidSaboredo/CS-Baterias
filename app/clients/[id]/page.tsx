@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import { addSale } from '@/app/actions'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import ClientSaleForm from '@/app/components/ClientSaleForm'
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,10 +15,6 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
         orderBy: { date: 'desc' },
       },
     },
-  })
-
-  const products = await prisma.product.findMany({
-    orderBy: { brand: 'asc' },
   })
 
   if (!client) {
@@ -71,75 +67,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Registrar Venta</h3>
-            <form 
-              action={async (formData: FormData) => {
-                'use server'
-                await addSale(client.id, formData)
-                redirect('/sales')
-              }} 
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Producto *</label>
-                <select 
-                  name="productId" 
-                  required 
-                  className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Seleccionar batería...</option>
-                  {products.map(product => (
-                    <option key={product.id} value={product.id}>
-                      {product.brand} {product.model} - {product.amperage}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Número de Serie *</label>
-                <input
-                  type="text"
-                  name="serialNumber"
-                  required
-                  className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="SN..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Precio *</label>
-                <div className="relative rounded-md shadow-sm">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="text-gray-500 sm:text-sm">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    name="price"
-                    step="0.01"
-                    required
-                    className="block w-full rounded-md border-gray-300 pl-7 p-2 border focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Garantía (meses)</label>
-                <input
-                  type="number"
-                  name="warrantyDuration"
-                  defaultValue={12}
-                  className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors font-medium shadow-sm"
-              >
-                Registrar Venta
-              </button>
-            </form>
+            <ClientSaleForm clientId={client.id} />
           </div>
         </div>
 
