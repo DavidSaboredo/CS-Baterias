@@ -79,6 +79,19 @@ Nota sobre cantidad de productos visibles en la web e-commerce:
 - La API pública ya devuelve metadatos de paginación (`meta.total`, `meta.totalPages`, `page`, `limit`).
 - Si en la tienda se ven menos productos (por ejemplo 16), normalmente es por límite/paginación del lado consumidor (frontend e-commerce), no por truncamiento del backend de este proyecto.
 
+### Validación smoke ejecutada
+
+Se ejecutaron pruebas rápidas locales luego de estos cambios:
+
+- Build de producción OK (`next build --webpack`).
+- Test de descuentos OK (`tests/discount.test.js`).
+- Verificación API pública:
+   - `GET /api/public/products?available=true&limit=250` => `count: 50`, `total: 50`.
+   - `GET /api/public/products?limit=100` => `count: 53`, `total: 53`.
+   - `GET /api/public/products?available=true&limit=16` => `count: 16`, `total: 50`, `totalPages: 4`.
+
+Conclusión: backend/API entrega el catálogo completo; la vista de 16 ítems depende de paginación/límite en el consumidor e-commerce.
+
 ## API de Stock
 
 La aplicación expone una API REST de solo lectura para consumir el stock desde otra web.
