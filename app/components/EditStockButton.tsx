@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { Edit2, X, Check, Lock, Package, Upload } from 'lucide-react'
 import { updateProductStock } from '@/app/actions'
+import { getPrimaryButtonClasses } from '@/lib/button-styles'
 
 interface EditStockButtonProps {
   productId: number
@@ -261,7 +262,7 @@ export default function EditStockButton({
               <button
                 type="submit"
                 disabled={isUpdating || !password || newStock === ''}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
+                className={getPrimaryButtonClasses({ color: 'blue', disabled: isUpdating })}
               >
                 {isUpdating ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

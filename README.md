@@ -41,6 +41,44 @@ El acceso está protegido. Las credenciales por defecto son:
 - **Búsqueda**: Filtrado por nombre o patente.
 - **Eliminar**: Borrado de clientes.
 
+## Cambios recientes (Marzo 2026)
+
+### 1) Compatibilidad visual de botones (Chrome/Firefox)
+
+- Se unificaron estilos de botones primarios para evitar casos donde se veían "transparentes" en algunos navegadores.
+- Se centralizó la lógica en una utilidad compartida para mantener consistencia visual entre formularios.
+
+### 2) Nueva venta con buscador remoto de productos
+
+- La pantalla de nueva venta ya no precarga todo el catálogo en un select gigante.
+- Se agregó un combobox con búsqueda remota y paginación para mejorar rendimiento y UX.
+- Se incorporó una ruta interna para búsqueda autenticada por sesión:
+   - `GET /api/internal/products/search`
+
+### 3) Importación masiva desde Excel con previsualización
+
+- Nueva sección en Stock para importar productos desde `.xlsx`, `.xls` o `.csv`.
+- Flujo de dos pasos:
+   1. Previsualización (sin persistir): valida filas, marca errores y detecta duplicados.
+   2. Confirmación: requiere contraseña admin y ejecuta persistencia en transacción.
+- Comportamiento de negocio en importación:
+   - Si el producto existe (marca + modelo + amperaje), actualiza precio y stock mínimo.
+   - Si no existe, crea producto nuevo.
+   - No rompe APIs públicas existentes.
+
+### Estado del contrato de integración e-commerce
+
+Se mantuvo sin cambios en estructura/autenticación:
+
+- `GET /api/public/products`
+- `GET /api/public/products/:id`
+- `POST /api/orders`
+
+Nota sobre cantidad de productos visibles en la web e-commerce:
+
+- La API pública ya devuelve metadatos de paginación (`meta.total`, `meta.totalPages`, `page`, `limit`).
+- Si en la tienda se ven menos productos (por ejemplo 16), normalmente es por límite/paginación del lado consumidor (frontend e-commerce), no por truncamiento del backend de este proyecto.
+
 ## API de Stock
 
 La aplicación expone una API REST de solo lectura para consumir el stock desde otra web.

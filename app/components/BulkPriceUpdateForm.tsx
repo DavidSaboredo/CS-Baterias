@@ -3,6 +3,7 @@
 import { updateAllProductPricesByPercentage } from '@/app/actions'
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, BadgePercent, CheckCircle2, Lock, RefreshCw, AlertCircle } from 'lucide-react'
+import { getPrimaryButtonClasses } from '@/lib/button-styles'
 
 export default function BulkPriceUpdateForm() {
   const [percentage, setPercentage] = useState('')
@@ -113,7 +114,7 @@ export default function BulkPriceUpdateForm() {
         <button
           type="submit"
           disabled={isSubmitting || !percentage || !password}
-          className="w-full bg-amber-600 text-white px-4 py-3 rounded-xl hover:bg-amber-700 transition-all font-bold shadow-lg shadow-amber-900/20 flex items-center justify-center gap-2 disabled:opacity-50"
+          className={getPrimaryButtonClasses({ color: 'amber', disabled: isSubmitting || !percentage || !password })}
         >
           {isSubmitting ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

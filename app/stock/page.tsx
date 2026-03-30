@@ -4,6 +4,7 @@ import DeleteProductForm from '@/app/components/DeleteProductForm'
 import EditStockButton from '@/app/components/EditStockButton'
 import AddProductForm from '@/app/components/AddProductForm'
 import BulkPriceUpdateForm from '@/app/components/BulkPriceUpdateForm'
+import BulkProductImportForm from '@/app/components/BulkProductImportForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,11 @@ export default async function StockPage() {
         {/* Formulario de Alta de Producto */}
         <div>
           <AddProductForm />
+        </div>
+
+        {/* Formulario de Importación Bulk */}
+        <div>
+          <BulkProductImportForm />
         </div>
 
         <div>

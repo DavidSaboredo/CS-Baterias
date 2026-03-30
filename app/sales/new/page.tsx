@@ -7,12 +7,10 @@ export const revalidate = 0
 
 export default async function NewSalePage() {
   console.log('Rendering NewSalePage at', new Date().toISOString())
+  
+  // Only load clients; products will be loaded remotely via ProductSearchCombo
   const clients = await prisma.client.findMany({
     orderBy: { name: 'asc' },
-  })
-
-  const products = await prisma.product.findMany({
-    orderBy: { brand: 'asc' },
   })
 
   return (
@@ -26,7 +24,7 @@ export default async function NewSalePage() {
 
       <div className="bg-gray-50 p-6 rounded-lg">
         <div className="max-w-3xl mx-auto">
-          <NewSaleForm clients={clients} products={products} />
+          <NewSaleForm clients={clients} />
         </div>
       </div>
     </div>

@@ -5,6 +5,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { savePendingAction } from '@/lib/offline-db'
 import { useRouter } from 'next/navigation'
+import { getPrimaryButtonClasses } from '@/lib/button-styles'
+import ProductSearchCombo, { type Product } from './ProductSearchCombo'
 
 type Client = {
   id: number
@@ -12,16 +14,7 @@ type Client = {
   licensePlate: string | null
 }
 
-type Product = {
-  id: number
-  brand: string
-  model: string
-  amperage: string
-  price: number
-  stock: number
-}
-
-export default function NewSaleForm({ clients, products }: { clients: Client[], products: Product[] }) {
+export default function NewSaleForm({ clients }: { clients: Client[] }) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [price, setPrice] = useState<string>('')
   const [discountInfo, setDiscountInfo] = useState<{ amount: number, percent: number } | null>(null)
@@ -31,16 +24,16 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
   // Constante de política comercial (ej. 20% máximo)
   const MAX_DISCOUNT_PERCENT = 20
 
-  const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const product = products.find(p => p.id === parseInt(e.target.value))
-    setSelectedProduct(product || null)
-    if (product) {
-      setPrice(product.price.toString())
-      setDiscountInfo(null)
-    } else {
-      setPrice('')
-      setDiscountInfo(null)
-    }
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product)
+    setPrice(product.price.toString())
+    setDiscountInfo(null)
+  }
+
+  const handleProductUnselect = () => {
+    setSelectedProduct(null)
+    setPrice('')
+    setDiscountInfo(null)
   }
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,19 +131,19 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
       {/* Paso 2: Producto */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">2. Seleccionar Producto</h3>
-        <select 
-          name="productId" 
-          required 
-          className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
-          onChange={handleProductChange}
-        >
-          <option value="">Seleccionar producto...</option>
-          {products.map(product => (
-            <option key={product.id} value={product.id} disabled={product.stock <= 0}>
-              {product.brand} {product.model} ({product.amperage}) - ${product.price} {product.stock <= 0 ? '(Sin Stock)' : ''}
-            </option>
-          ))}
-        </select>
+        <ProductSearchCombo
+          onSelect={handleProductSelect}
+          onUnselect={handleProductUnselect}
+          selectedProduct={selectedProduct}
+          showStock={true}
+        />
+        {/* Hidden field for form submission */}
+        <input
+          type="hidden"
+          name="productId"
+          value={selectedProduct?.id || ''}
+          required
+        />
       </div>
 
       {/* Paso 3: Detalles */}
@@ -252,7 +245,7 @@ export default function NewSaleForm({ clients, products }: { clients: Client[], 
         <button
           type="submit"
           disabled={isSubmitting || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
-          className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className={getPrimaryButtonClasses({ color: 'green', disabled: isSubmitting || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT })}
         >
           {isSubmitting ? 'Procesando...' : 'Confirmar Venta'}
         </button>

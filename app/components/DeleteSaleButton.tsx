@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Trash2, X, Check, Lock } from 'lucide-react'
 import { deleteSale } from '@/app/actions'
+import { getPrimaryButtonClasses } from '@/lib/button-styles'
 
 interface DeleteSaleButtonProps {
   saleId: number
@@ -100,7 +101,7 @@ export default function DeleteSaleButton({ saleId, saleInfo }: DeleteSaleButtonP
               <button
                 type="submit"
                 disabled={isDeleting || !password}
-                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
+                className={getPrimaryButtonClasses({ color: 'red', disabled: isDeleting })}
               >
                 {isDeleting ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

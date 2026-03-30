@@ -4,6 +4,7 @@ import { addClient } from '@/app/actions';
 import { useRef, useState } from 'react';
 import { UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
 import { savePendingAction } from '@/lib/offline-db';
+import { getPrimaryButtonClasses } from '@/lib/button-styles';
 
 export default function AddClientForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -85,7 +86,7 @@ export default function AddClientForm() {
         <button 
           type="submit" 
           disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-50"
+          className={getPrimaryButtonClasses({ color: 'blue', disabled: isSubmitting })}
         >
           {isSubmitting ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -4,6 +4,7 @@ import { addProduct } from '@/app/actions';
 import { useRef, useState } from 'react';
 import { Package, PlusCircle, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 import { savePendingAction } from '@/lib/offline-db';
+import { getPrimaryButtonClasses } from '@/lib/button-styles';
 
 export default function AddProductForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -180,7 +181,7 @@ export default function AddProductForm() {
         <button 
           type="submit" 
           disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-50"
+          className={getPrimaryButtonClasses({ color: 'blue', disabled: isSubmitting })}
         >
           {isSubmitting ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
