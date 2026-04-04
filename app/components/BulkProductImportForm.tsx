@@ -1,19 +1,17 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Upload, AlertCircle, CheckCircle2, AlertTriangle, Download } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Upload, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { previewBulkImport, confirmBulkImport } from '@/app/actions/importProducts'
 import { BulkImportResult } from '@/lib/product-import-schema'
-import { getPrimaryButtonClasses } from '@/lib/button-styles'
-import * as XLSX from 'xlsx'
 
 export default function BulkProductImportForm() {
+  const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<BulkImportResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isConfirming, setIsConfirming] = useState(false)
-  const [password, setPassword] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +26,7 @@ export default function BulkProductImportForm() {
     setSelectedFile(file)
     setMessage(null)
 
-    // Generate preview
+    // Generate preview and auto-import if valid
     setIsLoading(true)
     try {
       const buffer = await file.arrayBuffer()
@@ -37,6 +35,28 @@ export default function BulkProductImportForm() {
 
       if (!result.success) {
         setMessage({ type: 'error', text: 'Error al procesar el archivo' })
+        return
+      }
+
+      if (result.summary.valid === 0) {
+        setMessage({ type: 'error', text: 'No se encontraron filas válidas para importar.' })
+        return
+      }
+
+      if (result.summary.invalid > 0) {
+        setMessage({ type: 'error', text: 'El archivo tiene filas con error. Revisá el detalle.' })
+        return
+      }
+
+      const confirmResult = await confirmBulkImport(new Uint8Array(buffer))
+      if (confirmResult.success) {
+        setMessage({
+          type: 'success',
+          text: `✓ Importación automática completada y guardada: ${confirmResult.summary.created} productos creados, ${confirmResult.summary.updated} actualizados.`,
+        })
+        router.refresh()
+      } else {
+        setMessage({ type: 'error', text: confirmResult.error || 'Error al guardar' })
       }
     } catch (error) {
       setMessage({
@@ -49,59 +69,11 @@ export default function BulkProductImportForm() {
     }
   }
 
-  const handleConfirm = async () => {
-    if (!selectedFile || !preview?.success) return
-    if (!password.trim()) {
-      setMessage({ type: 'error', text: 'Ingresá la contraseña de administrador' })
-      return
-    }
-
-    setIsConfirming(true)
-    try {
-      const buffer = await selectedFile.arrayBuffer()
-      const result = await confirmBulkImport(new Uint8Array(buffer), password)
-
-      if (result.success) {
-        setMessage({
-          type: 'success',
-          text: `✓ Importación completada: ${result.summary.created} productos creados, ${result.summary.updated} actualizados.`,
-        })
-        setSelectedFile(null)
-        setPreview(null)
-        setPassword('')
-        if (fileInputRef.current) fileInputRef.current.value = ''
-      } else {
-        setMessage({ type: 'error', text: result.error || 'Error al guardar' })
-      }
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Error desconocido',
-      })
-    } finally {
-      setIsConfirming(false)
-    }
-  }
-
   const handleCancel = () => {
     setSelectedFile(null)
     setPreview(null)
-    setPassword('')
     setMessage(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const downloadTemplate = () => {
-    const template = [
-      { brand: 'Moura', model: 'M20GD', amperage: '65Ah', price: 45000, minStock: 5 },
-      { brand: 'Impact', model: 'ISM50', amperage: '50Ah', price: 38000, minStock: 3 },
-      { brand: 'Willard', model: 'UB500', amperage: '50Ah', price: 35000, minStock: 5 },
-    ]
-
-    const ws = XLSX.utils.json_to_sheet(template)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Productos')
-    XLSX.writeFile(wb, 'plantilla-productos.xlsx')
   }
 
   return (
@@ -138,21 +110,13 @@ export default function BulkProductImportForm() {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={downloadTemplate}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Descargar plantilla de ejemplo
-          </button>
-
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
             <p className="font-medium mb-1">📋 Formato esperado:</p>
             <ul className="list-disc pl-5 space-y-0.5">
-              <li>Columnas: brand, model, amperage, price, minStock (opcional)</li>
-              <li>Ejemplos: Moura, M20GD, 65Ah, 45000, 5</li>
-              <li>Solo se actualizan precios. Stock no se modifica en esta versión.</li>
+              <li>Columnas: articulo, final (precio), existencias</li>
+              <li>Ejemplo: Moura M20GD 65Ah, 45000, 5</li>
+              <li>Al subir el archivo, la importación se ejecuta automáticamente.</li>
+              <li>Si aparece el mensaje verde, ya quedó guardado en stock.</li>
             </ul>
           </div>
 
@@ -206,7 +170,7 @@ export default function BulkProductImportForm() {
                 </span>
                 <span className="flex items-center gap-2">
                   <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
-                  {preview.summary.willUpdate} producto(s) a actualizar precio
+                  {preview.summary.willUpdate} producto(s) a actualizar precio y stock
                 </span>
               </div>
             </div>
@@ -253,44 +217,15 @@ export default function BulkProductImportForm() {
             </div>
           )}
 
-          {/* Password and action buttons */}
-          {preview.summary.invalid === 0 && preview.summary.valid > 0 && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contraseña de administrador
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Confirmar identidad"
-                  className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-green-500 focus:border-green-500"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  disabled={isConfirming}
-                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={isConfirming || !password}
-                  className={getPrimaryButtonClasses({
-                    color: 'green',
-                    disabled: isConfirming || !password,
-                    fullWidth: true,
-                  })}
-                >
-                  {isConfirming ? 'Guardando...' : 'Confirmar Importación'}
-                </button>
-              </div>
+          {preview.summary.valid > 0 && (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Limpiar vista
+              </button>
             </div>
           )}
 

@@ -5,12 +5,28 @@ import EditStockButton from '@/app/components/EditStockButton'
 import AddProductForm from '@/app/components/AddProductForm'
 import BulkPriceUpdateForm from '@/app/components/BulkPriceUpdateForm'
 import BulkProductImportForm from '@/app/components/BulkProductImportForm'
+import StockSearchForm from '@/app/components/StockSearchForm'
 
 export const dynamic = 'force-dynamic'
 
-export default async function StockPage() {
+export default async function StockPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams
+  const query = (q || '').trim()
+
   const products = await prisma.product.findMany({
-    orderBy: { brand: 'asc' },
+    where: query
+      ? {
+          OR: [
+            { brand: { contains: query, mode: 'insensitive' } },
+            { model: { contains: query, mode: 'insensitive' } },
+            { amperage: { contains: query, mode: 'insensitive' } },
+          ],
+        }
+      : undefined,
+    orderBy: [
+      { updatedAt: 'desc' },
+      { brand: 'asc' },
+    ],
   })
 
   return (
@@ -34,10 +50,15 @@ export default async function StockPage() {
 
         {/* Lista de Productos */}
         <div>
+          <div className="mb-4">
+            <StockSearchForm initialQuery={query} />
+          </div>
+
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">
               Inventario ({products.length})
             </h2>
+            {query && <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">Filtro: "{query}"</span>}
           </div>
 
           <div className="bg-white shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -56,7 +77,7 @@ export default async function StockPage() {
                   {products.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                        No hay productos registrados aún.
+                        {query ? 'No se encontraron productos con ese criterio.' : 'No hay productos registrados aún.'}
                       </td>
                     </tr>
                   ) : (

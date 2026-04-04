@@ -6,6 +6,78 @@ import { normalizeProductIdentity, productIdentityKey } from '@/lib/product-norm
 import { parseExcelFile } from '@/lib/product-import'
 import { revalidatePath } from 'next/cache'
 
+type ExistingProduct = {
+  id: number
+  brand: string
+  model: string
+  amperage: string
+}
+
+const WRITE_BATCH_SIZE = 100
+
+function normalizeArticleText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase()
+}
+
+function parseIdentityFromArticulo(articulo: string) {
+  const compact = articulo.replace(/\s+/g, ' ').trim()
+  const ampMatch = compact.match(/(\d+[\.,]?\d*\s*AH?)$/i)
+  const amperage = ampMatch ? ampMatch[1].replace(/\s+/g, '').toUpperCase() : 'S/AMP'
+  const withoutAmp = ampMatch ? compact.slice(0, compact.length - ampMatch[1].length).trim() : compact
+  const parts = withoutAmp.split(' ').filter(Boolean)
+
+  const brand = parts.length > 1 ? parts[0] : 'GENERICA'
+  const model = parts.length > 1 ? parts.slice(1).join(' ') : withoutAmp || compact
+
+  return normalizeProductIdentity(brand, model, amperage)
+}
+
+function buildLookups(products: ExistingProduct[]) {
+  const byFull = new Map<string, ExistingProduct[]>()
+  const byBrandModel = new Map<string, ExistingProduct[]>()
+  const byModel = new Map<string, ExistingProduct[]>()
+
+  const push = (map: Map<string, ExistingProduct[]>, key: string, product: ExistingProduct) => {
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(product)
+  }
+
+  for (const product of products) {
+    push(byFull, normalizeArticleText(`${product.brand} ${product.model} ${product.amperage}`), product)
+    push(byBrandModel, normalizeArticleText(`${product.brand} ${product.model}`), product)
+    push(byModel, normalizeArticleText(product.model), product)
+  }
+
+  return { byFull, byBrandModel, byModel }
+}
+
+function uniqueMatches(products: ExistingProduct[]): ExistingProduct[] {
+  const seen = new Set<number>()
+  const unique: ExistingProduct[] = []
+  for (const product of products) {
+    if (!seen.has(product.id)) {
+      seen.add(product.id)
+      unique.push(product)
+    }
+  }
+  return unique
+}
+
+function chunkArray<T>(items: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = []
+
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize))
+  }
+
+  return chunks
+}
+
 /**
  * Preview import: validate rows without persisting
  */
@@ -14,6 +86,10 @@ export async function previewBulkImport(
 ): Promise<BulkImportResult> {
   try {
     const rows = parseExcelFile(buffer)
+    const existingProducts = await prisma.product.findMany({
+      select: { id: true, brand: true, model: true, amperage: true },
+    })
+    const lookups = buildLookups(existingProducts)
 
     if (rows.length === 0) {
       return {
@@ -24,7 +100,12 @@ export async function previewBulkImport(
       }
     }
 
-    const validRows: Array<{ index: number; data: any; action: 'CREATE' | 'UPDATE' }> = []
+    const validRows: Array<{
+      index: number
+      data: { articulo: string; final: number; existencias: number }
+      action: 'CREATE' | 'UPDATE'
+      resolvedIdentity: { brand: string; model: string; amperage: string }
+    }> = []
     const invalidRows: Array<{ index: number; errors: string[] }> = []
     const seenIdentities = new Map<string, number[]>()
 
@@ -37,12 +118,32 @@ export async function previewBulkImport(
         const errors = result.error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
         invalidRows.push({ index: i + 1, errors })
       } else {
-        const normalized = normalizeProductIdentity(
-          result.data.brand,
-          result.data.model,
-          result.data.amperage
+        const articuloKey = normalizeArticleText(result.data.articulo)
+        const matches = uniqueMatches([
+          ...(lookups.byFull.get(articuloKey) ?? []),
+          ...(lookups.byBrandModel.get(articuloKey) ?? []),
+          ...(lookups.byModel.get(articuloKey) ?? []),
+        ])
+
+        if (matches.length > 1) {
+          invalidRows.push({
+            index: i + 1,
+            errors: [`articulo: coincide con ${matches.length} productos existentes. Especifica mejor el articulo.`],
+          })
+          continue
+        }
+
+        const action: 'CREATE' | 'UPDATE' = matches.length === 1 ? 'UPDATE' : 'CREATE'
+        const resolvedIdentity =
+          matches.length === 1
+            ? normalizeProductIdentity(matches[0].brand, matches[0].model, matches[0].amperage)
+            : parseIdentityFromArticulo(result.data.articulo)
+
+        const key = productIdentityKey(
+          resolvedIdentity.brand,
+          resolvedIdentity.model,
+          resolvedIdentity.amperage
         )
-        const key = productIdentityKey(normalized.brand, normalized.model, normalized.amperage)
 
         if (!seenIdentities.has(key)) {
           seenIdentities.set(key, [])
@@ -52,37 +153,11 @@ export async function previewBulkImport(
         validRows.push({
           index: i + 1,
           data: result.data,
-          action: 'CREATE', // Will be updated to UPDATE after DB check
+          action,
+          resolvedIdentity,
         })
       }
     }
-
-    // Check for existing products in DB and determine action
-    const existingProducts = await prisma.product.findMany({
-      where: {
-        OR: validRows.map(row => {
-          const normalized = normalizeProductIdentity(row.data.brand, row.data.model, row.data.amperage)
-          return {
-            AND: [
-              { brand: { equals: normalized.brand, mode: 'insensitive' } },
-              { model: { equals: normalized.model, mode: 'insensitive' } },
-              { amperage: { equals: normalized.amperage, mode: 'insensitive' } },
-            ],
-          }
-        }),
-      },
-      select: { id: true, brand: true, model: true, amperage: true },
-    })
-
-    const existingKeys = new Set(
-      existingProducts.map(p => productIdentityKey(p.brand, p.model, p.amperage))
-    )
-
-    // Update actions
-    validRows.forEach(row => {
-      const key = productIdentityKey(row.data.brand, row.data.model, row.data.amperage)
-      row.action = existingKeys.has(key) ? 'UPDATE' : 'CREATE'
-    })
 
     const duplicatesInFile = Array.from(seenIdentities.entries())
       .filter(([_, indices]) => indices.length > 1)
@@ -127,8 +202,8 @@ export async function confirmBulkImport(
   buffer: Uint8Array,
   password?: string
 ): Promise<{ success: boolean; error?: string; summary?: any }> {
-  // Verify admin password
-  if (password !== 'santino230525') {
+  // If password is provided, validate it. If omitted, allow automatic import flow.
+  if (password && password !== 'santino230525') {
     return { success: false, error: 'Contraseña de administrador incorrecta' }
   }
 
@@ -147,47 +222,60 @@ export async function confirmBulkImport(
       }
     }
 
-    // Persist in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      let created = 0
-      let updated = 0
+    const createRows = preview.validRows.filter(row => row.action === 'CREATE')
+    const updateRows = preview.validRows.filter(row => row.action === 'UPDATE')
 
-      for (const row of preview.validRows) {
-        const normalized = normalizeProductIdentity(row.data.brand, row.data.model, row.data.amperage)
+    let created = 0
+    let updated = 0
 
-        if (row.action === 'CREATE') {
-          await tx.product.create({
-            data: {
-              brand: normalized.brand,
-              model: normalized.model,
-              amperage: normalized.amperage,
-              price: row.data.price,
-              minStock: row.data.minStock,
-              stock: 0, // Don't import stock in this phase
-            },
-          })
-          created++
-        } else {
-          // UPDATE: only price and minStock
-          await tx.product.updateMany({
-            where: {
-              AND: [
-                { brand: { equals: normalized.brand, mode: 'insensitive' } },
-                { model: { equals: normalized.model, mode: 'insensitive' } },
-                { amperage: { equals: normalized.amperage, mode: 'insensitive' } },
-              ],
-            },
-            data: {
-              price: row.data.price,
-              minStock: row.data.minStock,
-            },
-          })
-          updated++
-        }
-      }
+    for (const batch of chunkArray(createRows, WRITE_BATCH_SIZE)) {
+      const result = await prisma.product.createMany({
+        data: batch.map(row => {
+          const normalized = normalizeProductIdentity(
+            row.resolvedIdentity.brand,
+            row.resolvedIdentity.model,
+            row.resolvedIdentity.amperage
+          )
 
-      return { created, updated }
-    })
+          return {
+            brand: normalized.brand,
+            model: normalized.model,
+            amperage: normalized.amperage,
+            price: row.data.final,
+            stock: row.data.existencias,
+          }
+        }),
+      })
+
+      created += result.count
+    }
+
+    for (const batch of chunkArray(updateRows, WRITE_BATCH_SIZE)) {
+      const operations = batch.map(row => {
+        const normalized = normalizeProductIdentity(
+          row.resolvedIdentity.brand,
+          row.resolvedIdentity.model,
+          row.resolvedIdentity.amperage
+        )
+
+        return prisma.product.updateMany({
+          where: {
+            AND: [
+              { brand: { equals: normalized.brand, mode: 'insensitive' } },
+              { model: { equals: normalized.model, mode: 'insensitive' } },
+              { amperage: { equals: normalized.amperage, mode: 'insensitive' } },
+            ],
+          },
+          data: {
+            price: row.data.final,
+            stock: row.data.existencias,
+          },
+        })
+      })
+
+      const batchResults = await prisma.$transaction(operations)
+      updated += batchResults.reduce((total, result) => total + result.count, 0)
+    }
 
     revalidatePath('/stock')
     revalidatePath('/sales/new')
@@ -196,9 +284,9 @@ export async function confirmBulkImport(
     return {
       success: true,
       summary: {
-        created: result.created,
-        updated: result.updated,
-        total: result.created + result.updated,
+        created,
+        updated,
+        total: created + updated,
       },
     }
   } catch (error) {

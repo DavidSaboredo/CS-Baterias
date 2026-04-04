@@ -58,12 +58,16 @@ El acceso está protegido. Las credenciales por defecto son:
 ### 3) Importación masiva desde Excel con previsualización
 
 - Nueva sección en Stock para importar productos desde `.xlsx`, `.xls` o `.csv`.
-- Flujo de dos pasos:
-   1. Previsualización (sin persistir): valida filas, marca errores y detecta duplicados.
-   2. Confirmación: requiere contraseña admin y ejecuta persistencia en transacción.
+- Flujo actual:
+   1. Previsualización automática: valida filas, marca errores y detecta duplicados.
+   2. Guardado automático: al subir un archivo válido se persiste sin paso manual adicional.
+- Formato esperado en archivo:
+   - `articulo`, `final`, `existencias` (también reconoce variantes comunes de encabezado)
+   - Ejemplo: `Moura M20GD 65Ah`, `45000`, `5`
 - Comportamiento de negocio en importación:
-   - Si el producto existe (marca + modelo + amperaje), actualiza precio y stock mínimo.
-   - Si no existe, crea producto nuevo.
+   - Si el producto existe, actualiza precio y stock (existencias).
+   - Si no existe, crea producto nuevo usando el valor de `articulo` para componer la identidad.
+   - Soporta existencias negativas y precio 0 para reflejar estados reales de stock.
    - No rompe APIs públicas existentes.
 
 ### 4) Ajustes mobile y unificación del buscador en ventas
@@ -149,6 +153,12 @@ Conclusión: backend/API entrega el catálogo completo; la vista de 16 ítems de
 
 - Compilación sin errores TypeScript en los módulos modificados.
 - Rutas principales verificadas localmente en estado operativo.
+
+### 9) Stock con búsqueda optimizada
+
+- Se agregó buscador en `/stock` por marca, modelo o amperaje.
+- La búsqueda funciona con debounce y sin salto de scroll al presionar Enter.
+- El inventario se ordena por productos actualizados recientemente para facilitar ver importaciones nuevas.
 
 ## API de Stock
 
