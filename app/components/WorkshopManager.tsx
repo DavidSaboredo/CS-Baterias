@@ -136,10 +136,9 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
       let yPosition = 10
 
       // Colores de marca
-      const redColor = [192, 39, 45] // #C0272D
-      const blackColor = [30, 30, 30] // #1E1E1E
-      const lightGray = [245, 245, 245]
-      const borderGray = [232, 232, 232]
+      const redColor: [number, number, number] = [192, 39, 45] // #C0272D
+      const blackColor: [number, number, number] = [30, 30, 30] // #1E1E1E
+      const lightGray: [number, number, number] = [245, 245, 245]
       const headerTopY = yPosition
 
       // ENCABEZADO - Izquierda: Nombre empresa + contacto
