@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { normalizePhoneForStorage } from '@/lib/phone-utils'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -32,7 +33,7 @@ export async function logout() {
 
 export async function addClient(formData: FormData) {
   const name = (formData.get('name') as string || '').trim()
-  const phone = (formData.get('phone') as string || '').trim()
+  const phone = normalizePhoneForStorage(formData.get('phone') as string)
   const licensePlate = (formData.get('licensePlate') as string || '').trim()
 
   if (!name) return { success: false, error: 'Nombre es requerido' }
@@ -41,7 +42,7 @@ export async function addClient(formData: FormData) {
     await prisma.client.create({
       data: {
         name,
-        phone: phone || null,
+        phone,
         licensePlate: licensePlate ? licensePlate.toUpperCase() : null,
       },
     })
@@ -58,16 +59,16 @@ export async function addClient(formData: FormData) {
 }
 
 export async function updateClient(id: number, formData: FormData) {
-  const name = formData.get('name') as string
-  const phone = formData.get('phone') as string
-  const licensePlate = formData.get('licensePlate') as string
+  const name = (formData.get('name') as string || '').trim()
+  const phone = normalizePhoneForStorage(formData.get('phone') as string)
+  const licensePlate = (formData.get('licensePlate') as string || '').trim()
 
   try {
     await prisma.client.update({
       where: { id },
       data: {
         name,
-        phone: phone || null,
+        phone,
         licensePlate: licensePlate ? licensePlate.toUpperCase() : null,
       },
     })
@@ -132,7 +133,7 @@ export async function addSale(clientId: number, formData: FormData) {
           price,
           originalPrice,
           discount,
-          warrantyDuration: warrantyDuration || 12,
+          warrantyDuration: Number.isNaN(warrantyDuration) ? 12 : warrantyDuration,
           status: 'active'
         },
       }),

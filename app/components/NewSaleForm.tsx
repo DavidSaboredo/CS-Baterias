@@ -5,16 +5,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { savePendingAction } from '@/lib/offline-db'
 import { useRouter } from 'next/navigation'
-import { getPrimaryButtonClasses } from '@/lib/button-styles'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 import ProductSearchCombo, { type Product } from './ProductSearchCombo'
+import ClientSearchCombo, { type Client } from './ClientSearchCombo'
 
-type Client = {
-  id: number
-  name: string
-  licensePlate: string | null
-}
-
-export default function NewSaleForm({ clients }: { clients: Client[] }) {
+export default function NewSaleForm() {
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [price, setPrice] = useState<string>('')
   const [discountInfo, setDiscountInfo] = useState<{ amount: number, percent: number } | null>(null)
@@ -34,6 +30,14 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
     setSelectedProduct(null)
     setPrice('')
     setDiscountInfo(null)
+  }
+
+  const handleClientSelect = (client: Client) => {
+    setSelectedClient(client)
+  }
+
+  const handleClientUnselect = () => {
+    setSelectedClient(null)
   }
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,6 +76,7 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
       alert('¡Venta guardada localmente! Se sincronizará en cuanto recuperes internet.')
       
       // Limpiar formulario en lugar de redirigir para evitar errores de red
+      setSelectedClient(null)
       setSelectedProduct(null)
       setPrice('')
       setDiscountInfo(null)
@@ -108,19 +113,20 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">1. Seleccionar Cliente</h3>
         <div className="flex flex-col sm:flex-row gap-2">
-          <select 
-            name="clientId" 
-            required 
-            className="w-full sm:flex-1 min-w-0 rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Buscar cliente...</option>
-            {clients.map(client => (
-              <option key={client.id} value={client.id}>
-                {client.name} {client.licensePlate ? `(${client.licensePlate})` : ''}
-              </option>
-            ))}
-          </select>
-          <Link href="/clients" className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 flex items-center justify-center whitespace-nowrap">
+          <div className="w-full sm:flex-1 min-w-0">
+            <ClientSearchCombo
+              onSelect={handleClientSelect}
+              onUnselect={handleClientUnselect}
+              selectedClient={selectedClient}
+            />
+            <input
+              type="hidden"
+              name="clientId"
+              value={selectedClient?.id || ''}
+              required
+            />
+          </div>
+          <Link href="/clients" className={`${getSecondaryButtonClasses()} w-full sm:w-auto whitespace-nowrap`}>
             Agregar nuevo cliente
           </Link>
         </div>
@@ -234,8 +240,10 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
                 type="number"
                 name="warrantyDuration"
                 defaultValue={12}
+                min={0}
                 className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
               />
+              <p className="mt-1 text-xs text-gray-400">Ingresá 0 si el artículo no tiene garantía.</p>
             </div>
           </div>
         </div>
@@ -244,8 +252,8 @@ export default function NewSaleForm({ clients }: { clients: Client[] }) {
       <div className="pt-6">
         <button
           type="submit"
-          disabled={isSubmitting || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
-          className={getPrimaryButtonClasses({ color: 'green', disabled: isSubmitting || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT })}
+          disabled={isSubmitting || !selectedClient || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
+          className={getPrimaryButtonClasses({ color: 'green', disabled: isSubmitting || !selectedClient || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT })}
         >
           {isSubmitting ? 'Procesando...' : 'Confirmar Venta'}
         </button>

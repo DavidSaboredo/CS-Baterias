@@ -72,7 +72,7 @@ export default async function SalesPage() {
                       ${sale.price.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                      {sale.warrantyDuration} meses
+                      {sale.warrantyDuration === 0 ? 'Sin garantía' : `${sale.warrantyDuration} meses`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

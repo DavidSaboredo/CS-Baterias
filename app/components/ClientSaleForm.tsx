@@ -133,13 +133,15 @@ export default function ClientSaleForm({ clientId }: { clientId: number }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Garantia (meses)</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Garantía (meses)</label>
         <input
           type="number"
           name="warrantyDuration"
           defaultValue={12}
+          min={0}
           className="w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500"
         />
+        <p className="mt-1 text-xs text-gray-400">Ingresá 0 si el artículo no tiene garantía.</p>
       </div>
 
       <button

@@ -56,6 +56,7 @@ export default async function ReportsPage() {
   })
 
   const expiringWarranties = activeSales.filter(sale => {
+    if (sale.warrantyDuration === 0) return false
     const saleDate = new Date(sale.date)
     const expirationDate = new Date(saleDate)
     expirationDate.setMonth(expirationDate.getMonth() + sale.warrantyDuration)

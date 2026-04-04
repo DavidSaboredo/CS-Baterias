@@ -4,6 +4,7 @@ import { addClient, search } from '@/app/actions'
 import DeleteClientForm from '@/app/components/DeleteClientForm'
 import AddClientForm from '@/app/components/AddClientForm'
 import Link from 'next/link'
+import { getWhatsAppLink } from '@/lib/phone-utils'
 import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -79,7 +80,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                       </td>
                     </tr>
                   ) : (
-                    clients.map((client: Client) => (
+                    clients.map((client: Client) => {
+                      const whatsappLink = getWhatsAppLink(client.phone)
+
+                      return (
                       <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900 font-medium">
@@ -87,7 +91,20 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                           </Link>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 uppercase">{client.licensePlate || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{client.phone || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {whatsappLink ? (
+                            <a
+                              href={whatsappLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-700 hover:text-green-800 hover:underline"
+                            >
+                              {client.phone}
+                            </a>
+                          ) : (
+                            client.phone || '-'
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Link href={`/edit/${client.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">
                             Editar
@@ -95,7 +112,8 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                           <DeleteClientForm id={client.id} />
                         </td>
                       </tr>
-                    ))
+                      )
+                    })
                   )}
                 </tbody>
               </table>

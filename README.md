@@ -98,6 +98,58 @@ Se ejecutaron pruebas rápidas locales luego de estos cambios:
 
 Conclusión: backend/API entrega el catálogo completo; la vista de 16 ítems depende de paginación/límite en el consumidor e-commerce.
 
+## Cambios recientes (Abril 2026)
+
+### 1) Buscador remoto de clientes en ventas
+
+- En la creación de ventas se reemplazó el select masivo por un buscador remoto de clientes.
+- Se incorporó la ruta interna autenticada:
+   - `GET /api/internal/clients/search`
+- Mejora de rendimiento: se evita precargar todos los clientes al entrar a la pantalla.
+
+### 2) Taller con buscador remoto de ítems y flujo más flexible
+
+- En Taller se reemplazó la selección pesada de productos por búsqueda remota reutilizable.
+- Soporte para múltiples tipos de ítem en documentos:
+   - productos de stock,
+   - servicios,
+   - ítems externos.
+
+### 3) Documentos profesionales en PDF (Presupuesto / Orden / Recibo)
+
+- Se agregó descarga directa de PDF desde Taller con estilo profesional y colores de marca.
+- Se mejoró legibilidad y espaciado del encabezado para evitar solapes en fecha/validez.
+- El PDF incluye encabezado comercial, tabla de ítems, total destacado, términos y firmas.
+
+### 4) Envío por WhatsApp y acceso rápido desde clientes
+
+- Se agregó acción de inicio de chat WhatsApp en flujo de documentos.
+- Los teléfonos en listado y detalle de clientes son clickeables para abrir WhatsApp.
+
+### 5) Normalización de teléfonos
+
+- Se centralizó la lógica en utilidades compartidas:
+   - `normalizePhoneForStorage()`
+   - `toWhatsAppPhone()`
+   - `getWhatsAppLink()`
+- Se normaliza al guardar/editar cliente para mantener consistencia en toda la app.
+- Se incluyó script de normalización masiva para datos existentes.
+
+### 6) Garantía opcional por venta
+
+- Se habilitó registrar ventas con garantía `0` (sin garantía).
+- Formularios y reportes ajustados para mostrar y tratar correctamente este caso.
+
+### 7) Compatibilidad y coherencia operativa
+
+- Ajustes visuales de botones para evitar inconsistencias entre navegadores.
+- Dashboard alineado con zona horaria `America/Argentina/Buenos_Aires`.
+
+### 8) Validación final
+
+- Compilación sin errores TypeScript en los módulos modificados.
+- Rutas principales verificadas localmente en estado operativo.
+
 ## API de Stock
 
 La aplicación expone una API REST de solo lectura para consumir el stock desde otra web.

@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma'
 import NewSaleForm from '@/app/components/NewSaleForm'
 import Link from 'next/link'
 
@@ -7,11 +6,6 @@ export const revalidate = 0
 
 export default async function NewSalePage() {
   console.log('Rendering NewSalePage at', new Date().toISOString())
-  
-  // Only load clients; products will be loaded remotely via ProductSearchCombo
-  const clients = await prisma.client.findMany({
-    orderBy: { name: 'asc' },
-  })
 
   return (
     <div>
@@ -24,7 +18,7 @@ export default async function NewSalePage() {
 
       <div className="bg-gray-50 p-6 rounded-lg">
         <div className="max-w-3xl mx-auto">
-          <NewSaleForm clients={clients} />
+          <NewSaleForm />
         </div>
       </div>
     </div>

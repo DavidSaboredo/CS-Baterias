@@ -15,20 +15,6 @@ export default async function WorkshopPage() {
     }
   })
 
-  const products = await prisma.product.findMany({
-    orderBy: { brand: 'asc' },
-    where: { stock: { gt: 0 } },
-    select: {
-      id: true,
-      brand: true,
-      model: true,
-      amperage: true,
-      price: true,
-      stock: true,
-      // Exclude dates
-    }
-  })
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -38,7 +24,7 @@ export default async function WorkshopPage() {
         </div>
       </div>
 
-      <WorkshopManagerWrapper clients={clients} products={products} />
+      <WorkshopManagerWrapper clients={clients} />
     </div>
   )
 }

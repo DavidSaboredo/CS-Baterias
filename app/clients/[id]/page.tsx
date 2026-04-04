@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { getWhatsAppLink } from '@/lib/phone-utils'
 import { redirect } from 'next/navigation'
 import ClientSaleForm from '@/app/components/ClientSaleForm'
 
@@ -22,6 +23,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   }
 
   const totalSales = client.sales.reduce((sum, sale) => sum + sale.price, 0)
+  const whatsappLink = getWhatsAppLink(client.phone)
 
   return (
     <div>
@@ -44,7 +46,18 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
               </div>
               <div>
                 <span className="text-sm text-gray-500 block">Teléfono</span>
-                <span className="font-medium">{client.phone || '-'}</span>
+                {whatsappLink ? (
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-green-700 hover:text-green-800 hover:underline"
+                  >
+                    {client.phone}
+                  </a>
+                ) : (
+                  <span className="font-medium">{client.phone || '-'}</span>
+                )}
               </div>
               <div>
                 <span className="text-sm text-gray-500 block">Patente</span>

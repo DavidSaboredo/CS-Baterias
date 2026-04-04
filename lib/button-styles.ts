@@ -31,6 +31,8 @@ export function getPrimaryButtonClasses(config: ButtonStylesConfig = {}): string
 
   const baseClasses = [
     fullWidth ? 'w-full' : '',
+    'appearance-none',
+    'border border-transparent',
     bg,
     'text-white',
     'px-4 py-3',
@@ -56,6 +58,8 @@ export function getSecondaryButtonClasses(config: Partial<ButtonStylesConfig> = 
 
   return [
     fullWidth ? 'w-full' : '',
+    'appearance-none',
+    'border border-gray-200',
     'bg-gray-100',
     'text-gray-700',
     'px-4 py-2',

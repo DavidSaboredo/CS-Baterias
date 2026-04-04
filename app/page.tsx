@@ -4,17 +4,46 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+const ARGENTINA_TIMEZONE = 'America/Argentina/Buenos_Aires'
+const ARGENTINA_OFFSET = '-03:00'
+
+function getArgentinaTodayRange() {
+  const now = new Date()
+  const dateParts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: ARGENTINA_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now)
+
+  const year = dateParts.find((part) => part.type === 'year')?.value
+  const month = dateParts.find((part) => part.type === 'month')?.value
+  const day = dateParts.find((part) => part.type === 'day')?.value
+
+  if (!year || !month || !day) {
+    const fallbackStart = new Date()
+    fallbackStart.setHours(0, 0, 0, 0)
+    const fallbackEnd = new Date(fallbackStart)
+    fallbackEnd.setDate(fallbackEnd.getDate() + 1)
+    return { start: fallbackStart, end: fallbackEnd }
+  }
+
+  const start = new Date(`${year}-${month}-${day}T00:00:00${ARGENTINA_OFFSET}`)
+  const end = new Date(start)
+  end.setUTCDate(end.getUTCDate() + 1)
+
+  return { start, end }
+}
+
 export default async function Dashboard() {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const endOfToday = new Date(today)
-  endOfToday.setDate(endOfToday.getDate() + 1)
+  const { start: todayStart, end: todayEnd } = getArgentinaTodayRange()
 
   const [salesToday, activeWarranties, products, recentSales, appointmentsToday] = await Promise.all([
     prisma.sale.count({
       where: {
         date: {
-          gte: today,
+          gte: todayStart,
+          lt: todayEnd,
         },
       },
     }),
@@ -49,8 +78,8 @@ export default async function Dashboard() {
     prisma.appointment.findMany({
       where: {
         startTime: {
-          gte: today,
-          lt: endOfToday,
+          gte: todayStart,
+          lt: todayEnd,
         },
       },
       include: {
@@ -72,7 +101,13 @@ export default async function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="text-sm text-gray-500 capitalize">
-          {new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          {new Date().toLocaleDateString('es-AR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            timeZone: ARGENTINA_TIMEZONE,
+          })}
         </div>
       </div>
 
@@ -164,11 +199,13 @@ export default async function Dashboard() {
                       {new Date(appointment.startTime).toLocaleTimeString('es-AR', {
                         hour: '2-digit',
                         minute: '2-digit',
+                        timeZone: ARGENTINA_TIMEZONE,
                       })}
                       {' - '}
                       {new Date(appointment.endTime).toLocaleTimeString('es-AR', {
                         hour: '2-digit',
                         minute: '2-digit',
+                        timeZone: ARGENTINA_TIMEZONE,
                       })}
                     </p>
                   </div>

@@ -1,86 +1,75 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { getSecondaryButtonClasses } from '@/lib/button-styles'
 
-export type Product = {
+export type Client = {
   id: number
-  brand: string
-  model: string
-  amperage: string
-  price: number
-  stock: number
-  minStock: number
-  available: boolean
+  name: string
+  phone: string | null
+  licensePlate: string | null
   displayName: string
 }
 
-interface ProductSearchComboProps {
-  onSelect: (product: Product) => void
-  selectedProduct: Product | null
+interface ClientSearchComboProps {
+  onSelect: (client: Client) => void
+  selectedClient: Client | null
   onUnselect?: () => void
-  showStock?: boolean
 }
 
-export default function ProductSearchCombo({
+export default function ClientSearchCombo({
   onSelect,
-  selectedProduct,
+  selectedClient,
   onUnselect,
-  showStock = true,
-}: ProductSearchComboProps) {
+}: ClientSearchComboProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [products, setProducts] = useState<Product[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const performSearch = useCallback(
-    async (term: string, pageNum: number = 1) => {
-      if (!term.trim()) {
-        setProducts([])
-        setPage(1)
-        setTotalPages(0)
-        setError(null)
-        return
-      }
-
-      setIsLoading(true)
+  const performSearch = useCallback(async (term: string, pageNum: number = 1) => {
+    if (!term.trim()) {
+      setClients([])
+      setPage(1)
+      setTotalPages(0)
       setError(null)
+      return
+    }
 
-      try {
-        const params = new URLSearchParams({
-          search: term,
-          page: pageNum.toString(),
-          limit: '50',
-          available: 'true',
-        })
+    setIsLoading(true)
+    setError(null)
 
-        const response = await fetch(`/api/internal/products/search?${params}`)
-        if (!response.ok) {
-          throw new Error('Error al buscar productos')
-        }
+    try {
+      const params = new URLSearchParams({
+        search: term,
+        page: pageNum.toString(),
+        limit: '20',
+      })
 
-        const result = await response.json()
-        setProducts(result.data || [])
-        setPage(result.meta.page)
-        setTotalPages(result.meta.totalPages)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido')
-        setProducts([])
-      } finally {
-        setIsLoading(false)
+      const response = await fetch(`/api/internal/clients/search?${params}`)
+      if (!response.ok) {
+        throw new Error('Error al buscar clientes')
       }
-    },
-    []
-  )
+
+      const result = await response.json()
+      setClients(result.data || [])
+      setPage(result.meta.page)
+      setTotalPages(result.meta.totalPages)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+      setClients([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const term = e.target.value
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const term = event.target.value
       setSearchTerm(term)
       setPage(1)
       performSearch(term, 1)
@@ -88,11 +77,11 @@ export default function ProductSearchCombo({
     [performSearch]
   )
 
-  const handleSelectProduct = useCallback(
-    (product: Product) => {
-      onSelect(product)
+  const handleSelectClient = useCallback(
+    (client: Client) => {
+      onSelect(client)
       setSearchTerm('')
-      setProducts([])
+      setClients([])
       setError(null)
     },
     [onSelect]
@@ -101,32 +90,32 @@ export default function ProductSearchCombo({
   const handleUnselect = useCallback(() => {
     onUnselect?.()
     setSearchTerm('')
-    setProducts([])
+    setClients([])
     setError(null)
     inputRef.current?.focus()
   }, [onUnselect])
 
   const handleClearSearch = useCallback(() => {
     setSearchTerm('')
-    setProducts([])
+    setClients([])
     setError(null)
     setPage(1)
     setTotalPages(0)
     inputRef.current?.focus()
   }, [])
 
-  const isDropdownVisible = searchTerm.trim() && (products.length > 0 || isLoading || error)
+  const isDropdownVisible = searchTerm.trim() && (clients.length > 0 || isLoading || error)
 
   return (
     <div className="relative">
-      {!selectedProduct ? (
+      {!selectedClient ? (
         <div className="relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               ref={inputRef}
               type="text"
-              placeholder="Buscar por marca, modelo o amperaje..."
+              placeholder="Buscar por nombre, patente o teléfono..."
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
               value={searchTerm}
               onChange={handleSearchChange}
@@ -144,13 +133,10 @@ export default function ProductSearchCombo({
           </div>
 
           {isDropdownVisible && (
-            <div
-              ref={dropdownRef}
-              className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
-            >
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto">
               {isLoading && (
                 <div className="p-4 text-center text-gray-500 text-sm">
-                  Buscando productos...
+                  Buscando clientes...
                 </div>
               )}
 
@@ -160,36 +146,21 @@ export default function ProductSearchCombo({
                 </div>
               )}
 
-              {products.length > 0 && (
+              {clients.length > 0 && (
                 <>
-                  {products.map((product) => (
+                  {clients.map((client) => (
                     <button
-                      key={product.id}
+                      key={client.id}
                       type="button"
-                      onClick={() => handleSelectProduct(product)}
+                      onClick={() => handleSelectClient(client)}
                       className="w-full appearance-none bg-white text-left px-4 py-3 hover:bg-blue-50 flex items-center justify-between border-b border-gray-100 last:border-0 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">
-                          {product.displayName}
-                        </p>
+                        <p className="font-medium text-gray-900">{client.displayName}</p>
                         <p className="text-xs text-gray-500">
-                          Amperaje: {product.amperage} • ${product.price}
+                          {client.phone || 'Sin teléfono'}
                         </p>
                       </div>
-                      {showStock && (
-                        <span
-                          className={`flex-shrink-0 ml-2 px-2 py-1 text-xs font-semibold rounded ${
-                            product.stock > product.minStock
-                              ? 'bg-green-100 text-green-800'
-                              : product.stock > 0
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {product.stock}
-                        </span>
-                      )}
                     </button>
                   ))}
 
@@ -221,36 +192,22 @@ export default function ProductSearchCombo({
                 </>
               )}
 
-              {!isLoading && !error && products.length === 0 && searchTerm.trim() && (
+              {!isLoading && !error && clients.length === 0 && searchTerm.trim() && (
                 <div className="p-4 text-center text-gray-500 text-sm">
-                  No se encontraron productos.
+                  No se encontraron clientes.
                 </div>
               )}
             </div>
           )}
         </div>
       ) : (
-        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 gap-3">
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900">{selectedProduct.displayName}</p>
+            <p className="font-medium text-gray-900">{selectedClient.name}</p>
             <p className="text-sm text-gray-600">
-              Amperaje: {selectedProduct.amperage} • Precio: ${selectedProduct.price}
-              {showStock && (
-                <>
-                  {' • Stock: '}
-                  <span
-                    className={`font-semibold ${
-                      selectedProduct.stock > selectedProduct.minStock
-                        ? 'text-green-700'
-                        : selectedProduct.stock > 0
-                        ? 'text-yellow-700'
-                        : 'text-red-700'
-                    }`}
-                  >
-                    {selectedProduct.stock}
-                  </span>
-                </>
-              )}
+              {selectedClient.licensePlate || 'Sin patente'}
+              {' • '}
+              {selectedClient.phone || 'Sin teléfono'}
             </p>
           </div>
           {onUnselect && (
