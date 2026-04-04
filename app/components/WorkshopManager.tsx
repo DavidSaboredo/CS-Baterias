@@ -38,6 +38,10 @@ type ProductItem = SearchProduct & {
 
 type Item = ProductItem | Service | ExternalItem
 
+const isServiceItem = (item: Item): item is Service => 'isService' in item && item.isService === true
+const isExternalItem = (item: Item): item is ExternalItem => 'isExternal' in item && item.isExternal === true
+const isProductItem = (item: Item): item is ProductItem => !isServiceItem(item) && !isExternalItem(item)
+
 type DocumentType = 'budget' | 'order' | 'receipt'
 
 const DOCUMENT_TYPES = {
@@ -385,7 +389,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
     if (!selectedProduct) return
 
     const qty = Math.max(1, Number.parseInt(stockQty || '1', 10) || 1)
-    const existingItemIndex = items.findIndex((item) => !item.isService && !item.isExternal && item.id === selectedProduct.id)
+    const existingItemIndex = items.findIndex((item) => isProductItem(item) && item.id === selectedProduct.id)
 
     if (existingItemIndex >= 0) {
       const newItems = [...items]
@@ -419,7 +423,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
 
     const existingExternalIndex = items.findIndex(
       (item) =>
-        item.isExternal &&
+        isExternalItem(item) &&
         item.description.toLowerCase() === normalizedDesc.toLowerCase() &&
         item.price === parsedPrice
     )
@@ -455,7 +459,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   const getItemDescription = (item: Item) => {
-    if (item.isService || item.isExternal) {
+    if (isServiceItem(item) || isExternalItem(item)) {
       return item.description
     }
 
@@ -770,7 +774,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
                       <tr key={index} className="group">
                         <td className="py-3">
                           <div className="flex items-center gap-2 min-w-0">
-                            {item.isService ? <Zap className="w-4 h-4 text-orange-500 shrink-0" /> : <Package className={`w-4 h-4 shrink-0 ${item.isExternal ? 'text-purple-500' : 'text-blue-500'}`} />}
+                            {isServiceItem(item) ? <Zap className="w-4 h-4 text-orange-500 shrink-0" /> : <Package className={`w-4 h-4 shrink-0 ${isExternalItem(item) ? 'text-purple-500' : 'text-blue-500'}`} />}
                             <span className="font-medium text-gray-900 break-words">
                               {getItemDescription(item)}
                             </span>
