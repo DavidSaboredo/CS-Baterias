@@ -43,7 +43,7 @@ export async function createAppointment(data: {
       },
     })
 
-    revalidatePath('/appointments')
+    revalidatePath('/')
     return { success: true, data: appointment }
   } catch (error) {
     console.error('Error creating appointment:', error)
@@ -56,7 +56,7 @@ export async function deleteAppointment(id: number) {
     await prisma.appointment.delete({
       where: { id },
     })
-    revalidatePath('/appointments')
+    revalidatePath('/')
     return { success: true }
   } catch (error) {
     console.error('Error deleting appointment:', error)

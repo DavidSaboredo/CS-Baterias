@@ -91,6 +91,7 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const calendarRef = useRef<FullCalendar>(null)
+  const isSubmittingRef = useRef(false)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -158,7 +159,7 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
     [appointments, selectedDate],
   )
 
-  const events = appointments.map((appointment) => {
+  const events = useMemo(() => appointments.map((appointment) => {
     const reasonConfig =
       REASONS.find((item) => item.label === appointment.reason) ||
       REASONS.find((item) => item.id === appointment.reason) ||
@@ -179,7 +180,7 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
         reason: appointment.reason,
       },
     }
-  })
+  }), [appointments])
 
   const updateSelectedDatePart = (part: 'date' | 'time', value: string) => {
     const nextDate = new Date(selectedDate)
@@ -206,10 +207,11 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!selectedClient || isLoading) {
+    if (!selectedClient || isSubmittingRef.current) {
       return
     }
 
+    isSubmittingRef.current = true
     setIsLoading(true)
     setFeedback(null)
 
@@ -224,11 +226,14 @@ export default function AppointmentCalendar({ clients }: { clients: Client[] }) 
     if (response.success) {
       setFeedback({ type: 'success', text: 'Turno agendado correctamente.' })
       setDescription('')
+      setSelectedClient(null)
+      setClientSearch('')
       await fetchAppointments()
     } else {
       setFeedback({ type: 'error', text: response.error || 'Error al crear el turno' })
     }
 
+    isSubmittingRef.current = false
     setIsLoading(false)
   }
 
