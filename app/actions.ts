@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { normalizePhoneForStorage } from '@/lib/phone-utils'
+import { createProductWithUniqueCode } from '@/lib/product-code.server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -201,16 +202,14 @@ export async function addProduct(formData: FormData) {
       })
     } else {
       // NO EXISTE: Crear nuevo
-      await prisma.product.create({
-        data: {
-          brand,
-          model,
-          amperage,
-          imageUrl: imageUrl || null,
-          stock: stockToAdd,
-          minStock: minStock,
-          price,
-        },
+      await createProductWithUniqueCode(prisma, {
+        brand,
+        model,
+        amperage,
+        imageUrl: imageUrl || null,
+        stock: stockToAdd,
+        minStock: minStock,
+        price,
       })
     }
     
@@ -367,4 +366,3 @@ export async function updateAllProductPricesByPercentage(percentage: number, pas
     return { success: false, error: 'Error interno del servidor' }
   }
 }
-

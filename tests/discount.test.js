@@ -2,6 +2,12 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+let testCodeCounter = 0
+function nextTestCode() {
+  testCodeCounter += 1
+  return testCodeCounter.toString(36).toUpperCase().padStart(3, '0').slice(-3)
+}
+
 async function main() {
   console.log('Starting discount test...')
   
@@ -18,6 +24,7 @@ async function main() {
     product = await prisma.product.create({
       data: {
         brand: 'TestBrand', model: 'TestModel', amperage: '100Ah',
+        codigoAleatorio: nextTestCode(),
         stock: 10, minStock: 2, price: originalPrice
       }
     })

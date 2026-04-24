@@ -586,7 +586,7 @@ export default function PaginaMonitorPrecios() {
               <p className="text-gray-500 text-sm">Comparativa próximamente disponible después del primer scrape</p>
               <div className="rounded-lg bg-gray-100 p-12 text-center text-gray-600">
                 <TrendingDown className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Ejecuta el scraper desde la pestaña "Gestionar Fuentes" para obtener datos</p>
+                <p>Ejecuta el scraper desde la pestaña &quot;Gestionar Fuentes&quot; para obtener datos</p>
               </div>
             </div>
           )}

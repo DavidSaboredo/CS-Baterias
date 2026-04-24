@@ -1,35 +1,57 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react';
-import { getPendingActions, deletePendingAction, PendingAction } from '@/lib/offline-db';
+import { getPendingActions, deletePendingAction } from '@/lib/offline-db';
 import { useRouter } from 'next/navigation';
 import { addSale, addProduct, addClient } from '@/app/actions';
 
+let pendingCountCache = 0;
+const pendingCountListeners = new Set<() => void>();
+
+function getPendingCountSnapshot() {
+  return pendingCountCache;
+}
+
+function subscribePendingCount(listener: () => void) {
+  pendingCountListeners.add(listener);
+  return () => {
+    pendingCountListeners.delete(listener);
+  };
+}
+
+async function refreshPendingCount() {
+  const actions = await getPendingActions();
+  pendingCountCache = actions.length;
+  pendingCountListeners.forEach((listener) => listener());
+}
+
 export default function OfflineActionsManager() {
-  const [pendingCount, setPendingCount] = useState(0);
+  const pendingCount = useSyncExternalStore(
+    subscribePendingCount,
+    getPendingCountSnapshot,
+    getPendingCountSnapshot,
+  );
   const [isSyncing, setIsSyncing] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const updateCount = useCallback(async () => {
-    const actions = await getPendingActions();
-    setPendingCount(actions.length);
-  }, []);
-
   useEffect(() => {
-    updateCount();
+    void refreshPendingCount();
     // Listen for custom events when an action is saved
-    window.addEventListener('offline-action-saved', updateCount);
+    const handleRefresh = () => {
+      void refreshPendingCount();
+    };
+    window.addEventListener('offline-action-saved', handleRefresh);
     // Also check when connection is back
-    window.addEventListener('online', updateCount);
+    window.addEventListener('online', handleRefresh);
     
     return () => {
-      window.removeEventListener('offline-action-saved', updateCount);
-      window.removeEventListener('online', updateCount);
+      window.removeEventListener('offline-action-saved', handleRefresh);
+      window.removeEventListener('online', handleRefresh);
     };
-  }, [updateCount]);
+  }, []);
 
   const syncActions = async () => {
     if (isSyncing || pendingCount === 0) return;
@@ -89,7 +111,7 @@ export default function OfflineActionsManager() {
         }
       }
       
-      await updateCount();
+      await refreshPendingCount();
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       router.refresh();

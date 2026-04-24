@@ -5,8 +5,6 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function NewSalePage() {
-  console.log('Rendering NewSalePage at', new Date().toISOString())
-
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">

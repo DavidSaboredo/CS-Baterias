@@ -4,31 +4,31 @@ import { useState, useEffect } from 'react';
 import { Wifi, WifiOff } from 'lucide-react';
 
 export default function ConnectionStatus() {
-  const [isOnline, setIsOnline] = useState(true);
-  const [show, setShow] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => (typeof window === 'undefined' ? true : navigator.onLine));
+  const [show, setShow] = useState(() => (typeof window === 'undefined' ? false : !navigator.onLine));
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const handleOnline = () => {
       setIsOnline(true);
       // Show for 3 seconds then hide
       setShow(true);
-      const timer = setTimeout(() => setShow(false), 3000);
-      return () => clearTimeout(timer);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setShow(false), 3000);
     };
 
     const handleOffline = () => {
       setIsOnline(false);
       setShow(true);
+      if (timer) clearTimeout(timer);
     };
-
-    // Initial check
-    setIsOnline(navigator.onLine);
-    if (!navigator.onLine) setShow(true);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
     return () => {
+      if (timer) clearTimeout(timer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

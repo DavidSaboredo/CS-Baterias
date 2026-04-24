@@ -8,13 +8,17 @@ import { useRouter } from 'next/navigation'
 import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 import ProductSearchCombo, { type Product } from './ProductSearchCombo'
 import ClientSearchCombo, { type Client } from './ClientSearchCombo'
-
+import { isValidProductCode, normalizeProductCode } from '@/lib/product-code.js'
+ 
 export default function NewSaleForm() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [price, setPrice] = useState<string>('')
   const [discountInfo, setDiscountInfo] = useState<{ amount: number, percent: number } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [scanCode, setScanCode] = useState('')
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
   const router = useRouter()
   
   // Constante de política comercial (ej. 20% máximo)
@@ -38,6 +42,39 @@ export default function NewSaleForm() {
 
   const handleClientUnselect = () => {
     setSelectedClient(null)
+  }
+
+  const handleLookupByCode = async () => {
+    const normalized = normalizeProductCode(scanCode)
+    setScanCode(normalized)
+    setScanError(null)
+
+    if (!isValidProductCode(normalized)) {
+      setScanError('Formato inválido. Debe ser A-Z / 0-9 y exactamente 3 caracteres.')
+      return
+    }
+
+    setIsScanning(true)
+    try {
+      const res = await fetch(`/api/products/by-code/${encodeURIComponent(normalized)}`)
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setScanError(body?.error || 'No se pudo buscar el producto.')
+        return
+      }
+      const p = body.product as Product
+      if (p.stock <= 0) {
+        setScanError('Producto encontrado, pero sin stock.')
+        return
+      }
+      setSelectedProduct(p)
+      setPrice(p.price.toString())
+      setDiscountInfo(null)
+    } catch {
+      setScanError('Error de conexión.')
+    } finally {
+      setIsScanning(false)
+    }
   }
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +174,37 @@ export default function NewSaleForm() {
       {/* Paso 2: Producto */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">2. Seleccionar Producto</h3>
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por código</label>
+          <div className="flex gap-2">
+            <input
+              value={scanCode}
+              onChange={(e) => {
+                setScanCode(normalizeProductCode(e.target.value))
+                setScanError(null)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleLookupByCode()
+                }
+              }}
+              maxLength={3}
+              autoComplete="off"
+              placeholder="Ej: A1Z"
+              className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border uppercase tracking-widest text-center focus:ring-blue-500 focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleLookupByCode}
+              disabled={isScanning}
+              className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
+            >
+              {isScanning ? 'Buscando…' : 'Buscar'}
+            </button>
+          </div>
+          {scanError && <div className="mt-2 text-sm text-red-600">{scanError}</div>}
+        </div>
         <ProductSearchCombo
           onSelect={handleProductSelect}
           onUnselect={handleProductUnselect}
@@ -261,4 +329,3 @@ export default function NewSaleForm() {
     </form>
   )
 }
-

@@ -13,18 +13,30 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const { q } = await searchParams
   const query = q || ''
   
-  const clients = await prisma.client.findMany({
-    where: query ? {
-      OR: [
-        { name: { contains: query } },
-        { licensePlate: { contains: query } },
-      ],
-    } : {},
-    orderBy: { createdAt: 'desc' },
-  })
+  let dbError: string | null = null
+  let clients: Client[] = []
+  try {
+    clients = await prisma.client.findMany({
+      where: query ? {
+        OR: [
+          { name: { contains: query } },
+          { licensePlate: { contains: query } },
+        ],
+      } : {},
+      orderBy: { createdAt: 'desc' },
+    })
+  } catch (e: any) {
+    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar clientes.'
+    clients = []
+  }
 
   return (
     <div>
+      {dbError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {dbError}
+        </div>
+      )}
       {/* Search Form */}
       <div className="mb-8">
         <form action={search} className="flex gap-2">
@@ -58,7 +70,11 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             <h2 className="text-xl font-semibold text-gray-800">
               Clientes ({clients.length})
             </h2>
-            {query && <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">Filtro: "{query}"</span>}
+            {query && (
+              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                {`Filtro: "${query}"`}
+              </span>
+            )}
           </div>
           
           <div className="bg-white shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">

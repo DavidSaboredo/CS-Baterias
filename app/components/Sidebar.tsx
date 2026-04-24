@@ -45,6 +45,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={false}
               onClick={onNavigate}
               className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                 isActive

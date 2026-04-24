@@ -13,11 +13,6 @@ export default function StockSearchForm({ initialQuery }: StockSearchFormProps) 
   const lastAppliedQueryRef = useRef(initialQuery.trim())
 
   useEffect(() => {
-    setQuery(initialQuery)
-    lastAppliedQueryRef.current = initialQuery.trim()
-  }, [initialQuery])
-
-  useEffect(() => {
     const trimmed = query.trim()
     if (trimmed === lastAppliedQueryRef.current) {
       return

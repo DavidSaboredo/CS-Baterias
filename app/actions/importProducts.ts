@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ProductImportRowSchema, BulkImportResult } from '@/lib/product-import-schema'
 import { normalizeProductIdentity, productIdentityKey } from '@/lib/product-normalization'
 import { parseExcelFile } from '@/lib/product-import'
+import { createProductWithUniqueCode } from '@/lib/product-code.server'
 import { revalidatePath } from 'next/cache'
 
 type ExistingProduct = {
@@ -229,25 +230,23 @@ export async function confirmBulkImport(
     let updated = 0
 
     for (const batch of chunkArray(createRows, WRITE_BATCH_SIZE)) {
-      const result = await prisma.product.createMany({
-        data: batch.map(row => {
-          const normalized = normalizeProductIdentity(
-            row.resolvedIdentity.brand,
-            row.resolvedIdentity.model,
-            row.resolvedIdentity.amperage
-          )
+      for (const row of batch) {
+        const normalized = normalizeProductIdentity(
+          row.resolvedIdentity.brand,
+          row.resolvedIdentity.model,
+          row.resolvedIdentity.amperage,
+        )
 
-          return {
-            brand: normalized.brand,
-            model: normalized.model,
-            amperage: normalized.amperage,
-            price: row.data.final,
-            stock: row.data.existencias,
-          }
-        }),
-      })
+        await createProductWithUniqueCode(prisma, {
+          brand: normalized.brand,
+          model: normalized.model,
+          amperage: normalized.amperage,
+          price: row.data.final,
+          stock: row.data.existencias,
+        })
 
-      created += result.count
+        created += 1
+      }
     }
 
     for (const batch of chunkArray(updateRows, WRITE_BATCH_SIZE)) {

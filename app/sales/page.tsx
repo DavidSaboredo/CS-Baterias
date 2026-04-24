@@ -5,18 +5,30 @@ import DeleteSaleButton from '@/app/components/DeleteSaleButton'
 export const dynamic = 'force-dynamic'
 
 export default async function SalesPage() {
-  const sales = await prisma.sale.findMany({
-    include: {
-      client: true,
-      product: true,
-    },
-    orderBy: {
-      date: 'desc',
-    },
-  })
+  let dbError: string | null = null
+  let sales: any[] = []
+  try {
+    sales = await prisma.sale.findMany({
+      include: {
+        client: true,
+        product: true,
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    })
+  } catch (e: any) {
+    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar ventas.'
+    sales = []
+  }
 
   return (
     <div>
+      {dbError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {dbError}
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Ventas</h1>
         <Link

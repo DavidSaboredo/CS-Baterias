@@ -8,25 +8,48 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   const { id } = await params
   const clientId = parseInt(id)
 
-  const client = await prisma.client.findUnique({
-    where: { id: clientId },
-    include: {
-      sales: {
-        include: { product: true },
-        orderBy: { date: 'desc' },
+  let dbError: string | null = null
+  let client: any = null
+  try {
+    client = await prisma.client.findUnique({
+      where: { id: clientId },
+      include: {
+        sales: {
+          include: { product: true },
+          orderBy: { date: 'desc' },
+        },
       },
-    },
-  })
-
+    })
+  } catch (e: any) {
+    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar datos.'
+    client = null
+  }
   if (!client) {
+    if (dbError) {
+      return (
+        <div>
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {dbError}
+          </div>
+          <Link href="/" className="text-gray-600 hover:text-gray-900">
+            &larr; Volver
+          </Link>
+        </div>
+      )
+    }
     redirect('/')
   }
 
-  const totalSales = client.sales.reduce((sum, sale) => sum + sale.price, 0)
+  const totalSales = (client.sales as any[]).reduce((sum: number, sale: any) => sum + sale.price, 0)
   const whatsappLink = getWhatsAppLink(client.phone)
 
   return (
     <div>
+      {dbError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {dbError}
+        </div>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800">Detalle del Cliente</h2>
         <Link href="/" className="text-gray-600 hover:text-gray-900">
@@ -106,7 +129,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
                     </td>
                   </tr>
                 ) : (
-                  client.sales.map((sale) => (
+                  (client.sales as any[]).map((sale: any) => (
                     <tr key={sale.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(sale.date).toLocaleDateString()}

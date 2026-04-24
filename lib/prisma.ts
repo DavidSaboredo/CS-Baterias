@@ -1,15 +1,20 @@
 import { PrismaClient } from '@prisma/client'
 
-// Vercel Postgres may expose POSTGRES_PRISMA_URL / POSTGRES_URL instead of DATABASE_URL.
-// Prisma expects DATABASE_URL, so normalize it before creating the client.
-const resolvedDatabaseUrl =
-  process.env.POSTGRES_PRISMA_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_URL_NON_POOLING ||
-  process.env.DATABASE_URL
+const env = process.env
+if (!env.DATABASE_URL) {
+  env.DATABASE_URL =
+    env.BaseCSBaterias_DATABASE_URL ||
+    env.BaseCSBaterias_PRISMA_DATABASE_URL ||
+    env.PRISMA_DATABASE_URL ||
+    env.POSTGRES_PRISMA_URL ||
+    env.POSTGRES_URL ||
+    env.POSTGRES_URL_NON_POOLING ||
+    ''
+}
 
-if (resolvedDatabaseUrl && process.env.DATABASE_URL !== resolvedDatabaseUrl) {
-  process.env.DATABASE_URL = resolvedDatabaseUrl
+if (!env.POSTGRES_URL_NON_POOLING) {
+  env.POSTGRES_URL_NON_POOLING =
+    env.BaseCSBaterias_POSTGRES_URL || env.BaseCSBaterias_DATABASE_URL || env.DATABASE_URL || ''
 }
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
@@ -17,7 +22,7 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient }
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: ['query'],
+    log: process.env.NODE_ENV === 'development' ? ['query'] : [],
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

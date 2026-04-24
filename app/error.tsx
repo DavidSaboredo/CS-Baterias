@@ -35,6 +35,15 @@ export default function Error({
       <p className="text-gray-500 max-w-md text-center">
         Ha ocurrido un error inesperado al cargar la página. Por favor, intente nuevamente.
       </p>
+      {process.env.NODE_ENV !== 'production' && (
+        <div className="w-full max-w-2xl rounded-md border border-gray-200 bg-gray-50 p-4 text-left text-xs text-gray-700">
+          <div className="font-semibold">Detalle (dev)</div>
+          <div className="mt-2 font-mono whitespace-pre-wrap break-words">
+            {error.message}
+            {error.digest ? `\nDigest: ${error.digest}` : ''}
+          </div>
+        </div>
+      )}
       <button
         onClick={
           // Attempt to recover by trying to re-render the segment

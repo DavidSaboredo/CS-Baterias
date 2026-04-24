@@ -38,58 +38,76 @@ function getArgentinaTodayRange() {
 export default async function Dashboard() {
   const { start: todayStart, end: todayEnd } = getArgentinaTodayRange()
 
-  const [salesToday, activeWarranties, products, recentSales, appointmentsToday] = await Promise.all([
-    prisma.sale.count({
-      where: {
-        date: {
-          gte: todayStart,
-          lt: todayEnd,
+  let dbError: string | null = null
+  let salesToday = 0
+  let activeWarranties = 0
+  let products: Array<{ id: number; brand: string; model: string; stock: number; minStock: number }> = []
+  let recentSales: any[] = []
+  let appointmentsToday: any[] = []
+
+  try {
+    const res = await Promise.all([
+      prisma.sale.count({
+        where: {
+          date: {
+            gte: todayStart,
+            lt: todayEnd,
+          },
         },
-      },
-    }),
-    prisma.sale.count({
-      where: {
-        status: 'active',
-      },
-    }),
-    prisma.product.findMany({
-      select: {
-        id: true,
-        brand: true,
-        model: true,
-        stock: true,
-        minStock: true,
-      },
-      orderBy: [
-        { stock: 'asc' },
-        { brand: 'asc' },
-      ],
-    }),
-    prisma.sale.findMany({
-      take: 5,
-      orderBy: {
-        date: 'desc',
-      },
-      include: {
-        client: true,
-        product: true,
-      },
-    }),
-    prisma.appointment.findMany({
-      where: {
-        startTime: {
-          gte: todayStart,
-          lt: todayEnd,
+      }),
+      prisma.sale.count({
+        where: {
+          status: 'active',
         },
-      },
-      include: {
-        client: true,
-      },
-      orderBy: {
-        startTime: 'asc',
-      },
-    }),
-  ])
+      }),
+      prisma.product.findMany({
+        select: {
+          id: true,
+          brand: true,
+          model: true,
+          stock: true,
+          minStock: true,
+        },
+        orderBy: [{ stock: 'asc' }, { brand: 'asc' }],
+      }),
+      prisma.sale.findMany({
+        take: 5,
+        orderBy: {
+          date: 'desc',
+        },
+        include: {
+          client: true,
+          product: true,
+        },
+      }),
+      prisma.appointment.findMany({
+        where: {
+          startTime: {
+            gte: todayStart,
+            lt: todayEnd,
+          },
+        },
+        include: {
+          client: true,
+        },
+        orderBy: {
+          startTime: 'asc',
+        },
+      }),
+    ])
+    salesToday = res[0]
+    activeWarranties = res[1]
+    products = res[2]
+    recentSales = res[3]
+    appointmentsToday = res[4]
+  } catch (e: any) {
+    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar el dashboard.'
+    salesToday = 0
+    activeWarranties = 0
+    products = []
+    recentSales = []
+    appointmentsToday = []
+  }
 
   const lowStockProducts = products.filter((p) => p.stock <= p.minStock)
   const lowStockCount = lowStockProducts.length
@@ -97,6 +115,11 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {dbError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {dbError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>

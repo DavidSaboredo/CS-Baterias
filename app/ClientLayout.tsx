@@ -18,13 +18,15 @@ export default function ClientLayout({
   const isLoginPage = pathname === '/login'
 
   useEffect(() => {
-    // Precargar páginas clave para que funcionen offline
-    router.prefetch('/offline')
-    router.prefetch('/sales')
-    router.prefetch('/sales/new')
-    router.prefetch('/stock')
-    router.prefetch('/workshop')
-    router.prefetch('/clients')
+    // Evita prefetch masivo: en App Router el prefetch dispara requests RSC que ejecutan consultas a la DB.
+    // Para modo offline sólo se precarga la pantalla offline.
+    if (typeof window !== 'undefined') {
+      const key = 'prefetch_offline_v1'
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1')
+        router.prefetch('/offline')
+      }
+    }
   }, [router])
 
   if (isLoginPage) {

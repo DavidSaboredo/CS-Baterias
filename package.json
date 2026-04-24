@@ -5,9 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "prisma generate && next build --webpack",
+    "build": "prisma migrate deploy && prisma generate && next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "test": "prisma migrate deploy && prisma generate && node tests/product-code.unit.test.js && node tests/product-code.integration.test.js && node tests/discount.test.js",
+    "db:deploy": "prisma migrate deploy && prisma generate",
+    "db:reset": "prisma migrate reset --force && prisma generate",
+    "backup:db": "node scripts/backup-db-json.js",
+    "restore:db": "node scripts/restore-db-json.js",
     "postinstall": "prisma generate"
   },
   "keywords": [],
@@ -37,11 +42,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "eslint-config-next": "^16.1.6",
     "@types/node": "^25.3.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.27",
-    "eslint": "^10.0.2",
+    "eslint": "^9.39.0",
     "postcss": "^8.5.6",
     "typescript": "^5.9.3"
   }

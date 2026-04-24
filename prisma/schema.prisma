@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model Client {
@@ -52,6 +53,7 @@ model Product {
   model     String
   amperage  String
   imageUrl  String?
+  codigoAleatorio String @unique @db.Char(3) @map("codigo_aleatorio")
   stock     Int      @default(0)
   minStock  Int      @default(5)
   price     Float

@@ -17,9 +17,14 @@ export async function getAppointments(start: Date, end: Date) {
       },
     })
     return { success: true, data: appointments }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching appointments:', error)
-    return { success: false, error: 'Error al obtener los turnos' }
+    const msg = (error?.message || '').toString()
+    const isDbDown =
+      error?.code === 'P1001' ||
+      error?.name === 'PrismaClientInitializationError' ||
+      msg.includes("Can't reach database server")
+    return { success: false, error: isDbDown ? 'No se pudo conectar a la base de datos.' : 'Error al obtener los turnos.' }
   }
 }
 

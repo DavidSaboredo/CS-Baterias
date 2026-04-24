@@ -6,54 +6,67 @@ export default async function ReportsPage() {
   const now = new Date()
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-  
-  // Get sales for this month
-  const salesThisMonth = await prisma.sale.findMany({
-    where: {
-      date: {
-        gte: firstDayOfMonth,
-        lt: nextMonth,
-      },
-    },
-    include: {
-      product: true,
-    },
-  })
-
-  const totalRevenue = salesThisMonth.reduce((sum, sale) => sum + sale.price, 0)
-  const totalSalesCount = salesThisMonth.length
-
-  // Calculate sales by product
-  const salesByProduct = salesThisMonth.reduce((acc, sale) => {
-    const key = `${sale.product.brand} ${sale.product.model}`
-    if (!acc[key]) {
-      acc[key] = { count: 0, revenue: 0, name: key }
-    }
-    acc[key].count += 1
-    acc[key].revenue += sale.price
-    return acc
-  }, {} as Record<string, { count: number, revenue: number, name: string }>)
-
-  const topProducts = Object.values(salesByProduct).sort((a, b) => b.count - a.count)
-
-  // Get warranties expiring in next 30 days
   const thirtyDaysFromNow = new Date()
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
   
-  const activeSales = await prisma.sale.findMany({
-    where: { status: 'active' },
-    select: {
-      id: true,
-      date: true,
-      warrantyDuration: true,
-      client: {
-        select: { name: true }
+  let dbError: string | null = null
+  let salesThisMonth: any[] = []
+  let activeSales: any[] = []
+  let totalRevenue = 0
+  let totalSalesCount = 0
+  let topProducts: Array<{ count: number; revenue: number; name: string }> = []
+  try {
+    salesThisMonth = await prisma.sale.findMany({
+      where: {
+        date: {
+          gte: firstDayOfMonth,
+          lt: nextMonth,
+        },
       },
-      product: {
-        select: { brand: true, model: true }
+      include: {
+        product: true,
+      },
+    })
+
+    totalRevenue = salesThisMonth.reduce((sum, sale) => sum + sale.price, 0)
+    totalSalesCount = salesThisMonth.length
+
+    const salesByProduct = salesThisMonth.reduce((acc, sale) => {
+      const key = `${sale.product.brand} ${sale.product.model}`
+      if (!acc[key]) {
+        acc[key] = { count: 0, revenue: 0, name: key }
       }
-    }
-  })
+      acc[key].count += 1
+      acc[key].revenue += sale.price
+      return acc
+    }, {} as Record<string, { count: number, revenue: number, name: string }>)
+
+    topProducts = (Object.values(salesByProduct) as Array<{ count: number; revenue: number; name: string }>).sort(
+      (a, b) => b.count - a.count
+    )
+
+    activeSales = await prisma.sale.findMany({
+      where: { status: 'active' },
+      select: {
+        id: true,
+        date: true,
+        warrantyDuration: true,
+        client: {
+          select: { name: true }
+        },
+        product: {
+          select: { brand: true, model: true }
+        }
+      }
+    })
+  } catch (e: any) {
+    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar reportes.'
+    salesThisMonth = []
+    activeSales = []
+    totalRevenue = 0
+    totalSalesCount = 0
+    topProducts = []
+  }
 
   const expiringWarranties = activeSales.filter(sale => {
     if (sale.warrantyDuration === 0) return false
@@ -65,6 +78,11 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-8">
+      {dbError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {dbError}
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Reportes</h1>
         <div className="text-sm text-gray-500">
