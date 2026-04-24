@@ -134,6 +134,7 @@ const withPWA = withPWAInit({
       urlPattern: ({ url }) => {
         const isSameOrigin = self.origin === url.origin
         if (!isSameOrigin) return false
+        if (url.searchParams.has('_rsc')) return false
         const pathname = url.pathname
         // Exclude /api/auth/ since we use Auth.js or similar
         if (pathname.startsWith('/api/auth/')) return false
@@ -151,9 +152,23 @@ const withPWA = withPWAInit({
       },
     },
     {
+      urlPattern: ({ url, request }) => {
+        const isSameOrigin = self.origin === url.origin
+        if (!isSameOrigin) return false
+        if (url.searchParams.has('_rsc')) return false
+        if (request?.destination === 'document') return true
+        return false
+      },
+      handler: 'NetworkOnly',
+      options: {
+        cacheName: 'documents',
+      },
+    },
+    {
       urlPattern: ({ url }) => {
         const isSameOrigin = self.origin === url.origin
         if (!isSameOrigin) return false
+        if (url.searchParams.has('_rsc')) return false
         const pathname = url.pathname
         if (pathname.startsWith('/api/')) return false
         return true
