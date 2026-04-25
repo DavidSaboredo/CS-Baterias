@@ -74,7 +74,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
 
   const contactInfo = {
     businessName: 'CS Audio & Baterías',
-    address: 'Galarza 1279',
+    addressLines: ['Galarza 1279 (Casa Central)', '9 de Julio 1370 (Sucursal)'],
     phone: '3442-461830',
   }
 
@@ -178,9 +178,9 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
       pdf.setFont('Helvetica', 'normal')
       pdf.setFontSize(10)
       pdf.setTextColor(107, 107, 107)
-      pdf.text(contactInfo.address, 15, yPosition)
+      pdf.text(contactInfo.addressLines, 15, yPosition)
 
-      yPosition += 5
+      yPosition += 5 * contactInfo.addressLines.length
       pdf.text(`Tel: ${contactInfo.phone}`, 15, yPosition)
 
       // Badge tipo documento (derecha)
@@ -493,7 +493,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
       contactInfo.businessName,
       DOCUMENT_TYPES[docType].label.toUpperCase(),
       `Fecha: ${new Date().toLocaleDateString('es-AR')}`,
-      `Dirección: ${contactInfo.address}`,
+      ...contactInfo.addressLines,
       `Tel: ${contactInfo.phone}`,
     ]
 
@@ -878,9 +878,11 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
               <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#C0272D', margin: '0 0 6px 0' }}>
                 {contactInfo.businessName}
               </h1>
-              <p style={{ margin: '2px 0', fontSize: '10px', color: '#6B6B6B' }}>
-                {contactInfo.address}
-              </p>
+              {contactInfo.addressLines.map((addressLine) => (
+                <p key={addressLine} style={{ margin: '2px 0', fontSize: '10px', color: '#6B6B6B' }}>
+                  {addressLine}
+                </p>
+              ))}
               <p style={{ margin: '2px 0', fontSize: '10px', color: '#6B6B6B' }}>
                 Tel: {contactInfo.phone}
               </p>
