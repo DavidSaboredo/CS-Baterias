@@ -26,7 +26,19 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       orderBy: { createdAt: 'desc' },
     })
   } catch (e: any) {
-    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar clientes.'
+    const msg = (e?.message || '').toString()
+    const isDbDown =
+      e?.code === 'P1001' || e?.name === 'PrismaClientInitializationError' || msg.includes("Can't reach database server")
+    const isMissingTables =
+      e?.code === 'P2021' ||
+      msg.toLowerCase().includes('relation') && msg.toLowerCase().includes('does not exist') ||
+      msg.toLowerCase().includes('table') && msg.toLowerCase().includes('does not exist')
+    console.error('[ClientsPage] prisma error', { code: e?.code, name: e?.name, message: msg })
+    dbError = isDbDown
+      ? 'No se pudo conectar a la base de datos.'
+      : isMissingTables
+        ? 'La base de datos no tiene las tablas/migraciones aplicadas.'
+        : 'Error al cargar clientes.'
     clients = []
   }
 

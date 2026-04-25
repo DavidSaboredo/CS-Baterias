@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 
 const env = process.env
+if (env.NODE_ENV !== 'production' && env.BaseCSBaterias_DATABASE_URL) {
+  env.DATABASE_URL = env.BaseCSBaterias_DATABASE_URL
+}
 if (!env.DATABASE_URL) {
   env.DATABASE_URL =
     env.BaseCSBaterias_DATABASE_URL ||

@@ -101,7 +101,19 @@ export default async function Dashboard() {
     recentSales = res[3]
     appointmentsToday = res[4]
   } catch (e: any) {
-    dbError = e?.code === 'P1001' ? 'No se pudo conectar a la base de datos.' : 'Error al cargar el dashboard.'
+    const msg = (e?.message || '').toString()
+    const isDbDown =
+      e?.code === 'P1001' || e?.name === 'PrismaClientInitializationError' || msg.includes("Can't reach database server")
+    const isMissingTables =
+      e?.code === 'P2021' ||
+      msg.toLowerCase().includes('relation') && msg.toLowerCase().includes('does not exist') ||
+      msg.toLowerCase().includes('table') && msg.toLowerCase().includes('does not exist')
+    console.error('[Dashboard] prisma error', { code: e?.code, name: e?.name, message: msg })
+    dbError = isDbDown
+      ? 'No se pudo conectar a la base de datos.'
+      : isMissingTables
+        ? 'La base de datos no tiene las tablas/migraciones aplicadas.'
+        : 'Error al cargar el dashboard.'
     salesToday = 0
     activeWarranties = 0
     products = []
