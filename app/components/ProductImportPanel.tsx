@@ -27,18 +27,12 @@ export default function ProductImportPanel({ productsForExport }: { productsForE
   const [imageName, setImageName] = useState<string | null>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
   const downloadPdf = (pdf: jsPDF, fileName: string) => {
-    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent)
     const blob = pdf.output('blob')
     const url = URL.createObjectURL(blob)
 
-    if (isIOS) {
-      window.open(url, '_blank', 'noopener,noreferrer')
-      setTimeout(() => URL.revokeObjectURL(url), 10_000)
-      return
-    }
-
     const anchor = document.createElement('a')
     anchor.href = url
+    anchor.target = '_blank'
     anchor.download = fileName
     anchor.rel = 'noopener noreferrer'
     document.body.appendChild(anchor)
