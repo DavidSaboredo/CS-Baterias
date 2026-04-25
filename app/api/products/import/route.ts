@@ -4,7 +4,8 @@ import { createProductWithUniqueCode } from '@/lib/product-code.server';
 import { cookies } from 'next/headers';
 
 function parseCsv(content: string) {
-  const lines = content
+  const cleanedContent = content.replace(/^\uFEFF/, '')
+  const lines = cleanedContent
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .split('\n')
@@ -42,7 +43,7 @@ function parseCsv(content: string) {
     return out;
   };
 
-  const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+  const headers = parseLine(lines[0]).map((h) => h.toLowerCase().replace(/^\uFEFF/, ''));
   const rows = lines.slice(1).map(parseLine);
   return { headers, rows };
 }

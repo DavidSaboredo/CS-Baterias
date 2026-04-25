@@ -78,6 +78,27 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
     phone: '3442-461830',
   }
 
+  const downloadPdf = (pdf: jsPDF, fileName: string) => {
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent)
+    const blob = pdf.output('blob')
+    const url = URL.createObjectURL(blob)
+
+    if (isIOS) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      return
+    }
+
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = fileName
+    anchor.rel = 'noopener noreferrer'
+    document.body.appendChild(anchor)
+    anchor.click()
+    document.body.removeChild(anchor)
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
     documentTitle: `${docType}_${selectedClient?.name || 'cliente'}_${new Date().toISOString().split('T')[0]}`,
@@ -362,7 +383,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
       pdf.setTextColor(...redColor)
       pdf.text(contactInfo.businessName, rightX + 22.5, signatureY + 39, { align: 'center' })
 
-      pdf.save(fileName)
+      downloadPdf(pdf, fileName)
       alert('PDF descargado correctamente.')
     } catch (error) {
       console.error('Error al generar PDF:', error)

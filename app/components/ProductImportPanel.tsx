@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles';
 import { jsPDF } from 'jspdf';
 
@@ -25,6 +25,27 @@ export default function ProductImportPanel({ productsForExport }: { productsForE
   const [isAdjusting, setIsAdjusting] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
+  const csvFileInputRef = useRef<HTMLInputElement>(null);
+  const downloadPdf = (pdf: jsPDF, fileName: string) => {
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent)
+    const blob = pdf.output('blob')
+    const url = URL.createObjectURL(blob)
+
+    if (isIOS) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      return
+    }
+
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = fileName
+    anchor.rel = 'noopener noreferrer'
+    document.body.appendChild(anchor)
+    anchor.click()
+    document.body.removeChild(anchor)
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
 
   const example = useMemo(() => {
     return [
@@ -135,7 +156,7 @@ export default function ProductImportPanel({ productsForExport }: { productsForE
         y += rowHeight
       }
 
-      pdf.save(fileName)
+      downloadPdf(pdf, fileName)
       setMessage(`PDF generado: ${fileName}`)
     } catch {
       setMessage('No se pudo generar el PDF.')
@@ -153,6 +174,10 @@ export default function ProductImportPanel({ productsForExport }: { productsForE
       const res = await fetch('/api/products/import', { method: 'POST', body: fd });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (res.status === 401) {
+          setMessage('No autorizado. Iniciá sesión para importar.');
+          return;
+        }
         setMessage(body?.error || 'No se pudo importar.');
         return;
       }
@@ -219,7 +244,10 @@ export default function ProductImportPanel({ productsForExport }: { productsForE
           </button>
           <button
             type="button"
-            onClick={() => setTab('csv')}
+            onClick={() => {
+              setTab('csv');
+              requestAnimationFrame(() => csvFileInputRef.current?.click());
+            }}
             className={
               tab === 'csv'
                 ? getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })
@@ -263,6 +291,7 @@ export default function ProductImportPanel({ productsForExport }: { productsForE
 
           <div className="flex flex-col md:flex-row gap-2 items-start md:items-center">
             <input
+              ref={csvFileInputRef}
               type="file"
               accept=".csv,text/csv"
               disabled={isUploading}
