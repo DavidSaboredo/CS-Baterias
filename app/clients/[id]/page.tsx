@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getWhatsAppLink } from '@/lib/phone-utils'
 import { redirect } from 'next/navigation'
 import ClientSaleForm from '@/app/components/ClientSaleForm'
+import { getSecondaryButtonClasses } from '@/lib/button-styles'
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -94,7 +95,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
              <div className="mt-4 pt-4 border-t">
                 <Link 
                   href={`/edit/${client.id}`}
-                  className="block w-full text-center bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors"
+                  className={getSecondaryButtonClasses({ fullWidth: true, size: 'sm' })}
                 >
                   Editar Cliente
                 </Link>

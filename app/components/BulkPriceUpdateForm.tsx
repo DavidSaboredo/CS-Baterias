@@ -114,7 +114,7 @@ export default function BulkPriceUpdateForm() {
         <button
           type="submit"
           disabled={isSubmitting || !percentage || !password}
-          className={getPrimaryButtonClasses({ color: 'amber', disabled: isSubmitting || !percentage || !password })}
+          className={getPrimaryButtonClasses({ color: 'amber', disabled: isSubmitting || !percentage || !password, fullWidth: true })}
         >
           {isSubmitting ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

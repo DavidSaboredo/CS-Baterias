@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Printer } from 'lucide-react';
+import { getPrimaryButtonClasses } from '@/lib/button-styles';
 
 type ProductForLabel = {
   id: number;
@@ -39,7 +40,7 @@ export default function ProductCodeLabels({ products }: { products: ProductForLa
         <button
           type="button"
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800"
+          className={getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })}
         >
           <Printer className="w-4 h-4" />
           Imprimir

@@ -1,8 +1,20 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles';
+import { jsPDF } from 'jspdf';
 
-export default function ProductImportPanel() {
+type ProductForExport = {
+  codigoAleatorio: string
+  brand: string
+  model: string
+  amperage: string
+  stock: number
+  minStock: number
+  price: number
+}
+
+export default function ProductImportPanel({ productsForExport }: { productsForExport?: ProductForExport[] }) {
   const [tab, setTab] = useState<'csv' | 'image'>('csv');
   const [mode, setMode] = useState<'upsert' | 'prices' | 'stock'>('upsert');
   const [isUploading, setIsUploading] = useState(false);
@@ -21,6 +33,114 @@ export default function ProductImportPanel() {
       'Varta,Blue Dynamic,60Ah,3,2,1200',
     ].join('\n');
   }, []);
+
+  const exportStockPdf = async () => {
+    if (!productsForExport || productsForExport.length === 0) {
+      setMessage('No hay productos para exportar.')
+      return
+    }
+
+    try {
+      const pdf = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const marginX = 10
+      const marginTop = 12
+      const marginBottom = 12
+
+      const now = new Date()
+      const dateLabel = now.toLocaleString('es-AR')
+      const rawFileName = `backup_stock_${now.toISOString().slice(0, 10)}.pdf`
+      const fileName = rawFileName.replace(/[\\/:*?"<>|]+/g, '_')
+
+      const col = {
+        code: marginX,
+        product: marginX + 26,
+        amp: marginX + 120,
+        stock: marginX + 150,
+        min: marginX + 166,
+        price: marginX + 184,
+      }
+
+      const headerRowHeight = 7
+      const rowHeight = 6
+
+      const drawHeader = () => {
+        pdf.setFont('Helvetica', 'bold')
+        pdf.setFontSize(14)
+        pdf.setTextColor(20, 20, 20)
+        pdf.text('Backup de Stock', marginX, marginTop)
+
+        pdf.setFont('Helvetica', 'normal')
+        pdf.setFontSize(9)
+        pdf.setTextColor(90, 90, 90)
+        pdf.text(`Exportado: ${dateLabel}`, pageWidth - marginX, marginTop, { align: 'right' })
+
+        const y = marginTop + 6
+        pdf.setFillColor(30, 30, 30)
+        pdf.rect(marginX, y, pageWidth - marginX * 2, headerRowHeight, 'F')
+
+        pdf.setFont('Helvetica', 'bold')
+        pdf.setFontSize(9)
+        pdf.setTextColor(255, 255, 255)
+        pdf.text('COD', col.code, y + 4.5)
+        pdf.text('PRODUCTO', col.product, y + 4.5)
+        pdf.text('AMP', col.amp, y + 4.5)
+        pdf.text('STK', col.stock, y + 4.5, { align: 'right' })
+        pdf.text('MIN', col.min, y + 4.5, { align: 'right' })
+        pdf.text('PRECIO', col.price, y + 4.5, { align: 'right' })
+
+        return y + headerRowHeight
+      }
+
+      let y = drawHeader() + 2
+
+      pdf.setFont('Helvetica', 'normal')
+      pdf.setFontSize(9)
+      pdf.setTextColor(20, 20, 20)
+
+      const rows = [...productsForExport].sort((a, b) => {
+        const aName = `${a.brand} ${a.model}`.toLowerCase()
+        const bName = `${b.brand} ${b.model}`.toLowerCase()
+        return aName.localeCompare(bName)
+      })
+
+      for (let i = 0; i < rows.length; i += 1) {
+        const p = rows[i]
+        const willOverflow = y + rowHeight > pageHeight - marginBottom
+        if (willOverflow) {
+          pdf.addPage()
+          y = drawHeader() + 2
+          pdf.setFont('Helvetica', 'normal')
+          pdf.setFontSize(9)
+          pdf.setTextColor(20, 20, 20)
+        }
+
+        if (i % 2 === 0) {
+          pdf.setFillColor(248, 248, 248)
+          pdf.rect(marginX, y - 4.2, pageWidth - marginX * 2, rowHeight, 'F')
+        }
+
+        const productLabel = `${p.brand} ${p.model}`
+        const productLines = pdf.splitTextToSize(productLabel, col.amp - col.product - 2)
+        const productText = Array.isArray(productLines) && productLines.length > 0 ? String(productLines[0]) : productLabel
+
+        pdf.text(String(p.codigoAleatorio || '').toUpperCase(), col.code, y)
+        pdf.text(productText, col.product, y)
+        pdf.text(String(p.amperage || ''), col.amp, y)
+        pdf.text(String(p.stock ?? 0), col.stock, y, { align: 'right' })
+        pdf.text(String(p.minStock ?? 0), col.min, y, { align: 'right' })
+        pdf.text(`$${Number(p.price ?? 0).toFixed(2)}`, col.price, y, { align: 'right' })
+
+        y += rowHeight
+      }
+
+      pdf.save(fileName)
+      setMessage(`PDF generado: ${fileName}`)
+    } catch {
+      setMessage('No se pudo generar el PDF.')
+    }
+  }
 
   async function uploadCsv(file: File) {
     setIsUploading(true);
@@ -88,22 +208,34 @@ export default function ProductImportPanel() {
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <div className="flex items-center justify-between gap-4 mb-4">
         <h2 className="text-lg font-semibold text-gray-800">Cargas Masivas</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={exportStockPdf}
+            disabled={!productsForExport || productsForExport.length === 0}
+            className={getSecondaryButtonClasses({ fullWidth: false, size: 'sm', disabled: !productsForExport || productsForExport.length === 0 })}
+          >
+            Exportar stock (PDF)
+          </button>
           <button
             type="button"
             onClick={() => setTab('csv')}
-            className={`px-3 py-2 rounded text-sm border ${
-              tab === 'csv' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-            }`}
+            className={
+              tab === 'csv'
+                ? getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })
+                : getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })
+            }
           >
             Excel/CSV
           </button>
           <button
             type="button"
             onClick={() => setTab('image')}
-            className={`px-3 py-2 rounded text-sm border ${
-              tab === 'image' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-            }`}
+            className={
+              tab === 'image'
+                ? getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })
+                : getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })
+            }
           >
             Imagen
           </button>
@@ -148,7 +280,7 @@ export default function ProductImportPanel() {
                 await navigator.clipboard.writeText(example);
                 setMessage('Plantilla CSV copiada al portapapeles.');
               }}
-              className="bg-white border border-gray-200 px-4 py-2 rounded hover:bg-gray-50 text-sm"
+              className={getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })}
             >
               Copiar plantilla
             </button>
@@ -175,7 +307,7 @@ export default function ProductImportPanel() {
                 type="button"
                 onClick={applyAdjustment}
                 disabled={isAdjusting}
-                className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 text-sm disabled:opacity-50"
+                className={getPrimaryButtonClasses({ color: 'gray', disabled: isAdjusting, fullWidth: false, size: 'sm' })}
               >
                 {isAdjusting ? 'Aplicando…' : 'Aplicar'}
               </button>

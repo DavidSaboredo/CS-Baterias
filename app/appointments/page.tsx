@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import AppointmentCalendarWrapper from '@/app/components/AppointmentCalendarWrapper'
 import Link from 'next/link'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,22 +41,20 @@ export default async function AppointmentsPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 href="/appointments"
-                className="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                className={getPrimaryButtonClasses({ color: 'red', fullWidth: false, size: 'sm' })}
               >
                 Reintentar
               </Link>
               <Link
                 href="/offline"
-                className="inline-flex items-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-red-700 border border-red-200 hover:bg-red-50"
+                className={`${getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })} border-red-200 text-red-700 hover:bg-red-50`}
               >
                 Ir a modo offline
               </Link>
             </div>
           </div>
         ) : (
-          <div className="bg-white p-2 md:p-6 rounded-lg shadow-sm border border-gray-200">
-            <AppointmentCalendarWrapper clients={clients} />
-          </div>
+          <AppointmentCalendarWrapper clients={clients} />
         )}
     </div>
   )

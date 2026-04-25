@@ -4,11 +4,13 @@
  */
 
 export type ButtonColor = 'blue' | 'amber' | 'red' | 'green' | 'gray'
+export type ButtonSize = 'sm' | 'md'
 
 interface ButtonStylesConfig {
   color?: ButtonColor
   disabled?: boolean
   fullWidth?: boolean
+  size?: ButtonSize
 }
 
 /**
@@ -17,7 +19,7 @@ interface ButtonStylesConfig {
  * Replaces with solid shadow-md for better cross-browser rendering.
  */
 export function getPrimaryButtonClasses(config: ButtonStylesConfig = {}): string {
-  const { color = 'blue', disabled = false, fullWidth = true } = config
+  const { color = 'blue', disabled = false, fullWidth = false, size = 'md' } = config
 
   const colorMap: Record<ButtonColor, { bg: string; hover: string }> = {
     blue: { bg: 'bg-blue-600', hover: 'hover:bg-blue-700' },
@@ -29,19 +31,21 @@ export function getPrimaryButtonClasses(config: ButtonStylesConfig = {}): string
 
   const { bg, hover } = colorMap[color]
 
+  const padding = size === 'sm' ? 'px-3 py-2 text-sm rounded-lg' : 'px-4 py-2.5 rounded-xl'
+
   const baseClasses = [
     fullWidth ? 'w-full' : '',
     'appearance-none',
     'border border-transparent',
     bg,
     'text-white',
-    'px-4 py-3',
-    'rounded-xl',
+    padding,
     hover,
-    'transition-all',
-    'font-bold',
-    'shadow-md',
-    'flex items-center justify-center gap-2',
+    'transition-colors',
+    'font-semibold',
+    'shadow-sm',
+    'inline-flex items-center justify-center gap-2',
+    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10',
     disabled ? 'disabled:opacity-50 disabled:cursor-not-allowed' : 'disabled:opacity-50',
   ]
     .filter(Boolean)
@@ -54,21 +58,23 @@ export function getPrimaryButtonClasses(config: ButtonStylesConfig = {}): string
  * Generates secondary button classes for less prominent actions.
  */
 export function getSecondaryButtonClasses(config: Partial<ButtonStylesConfig> = {}): string {
-  const { disabled = false, fullWidth = false } = config
+  const { disabled = false, fullWidth = false, size = 'md' } = config
+
+  const padding = size === 'sm' ? 'px-3 py-2 text-sm rounded-lg' : 'px-4 py-2.5 rounded-xl'
 
   return [
     fullWidth ? 'w-full' : '',
     'appearance-none',
     'border border-gray-200',
-    'bg-gray-100',
-    'text-gray-700',
-    'px-4 py-2',
-    'rounded-lg',
-    'hover:bg-gray-200',
+    'bg-white',
+    'text-gray-800',
+    padding,
+    'hover:bg-gray-50',
     'transition-colors',
-    'font-medium',
+    'font-semibold',
     'shadow-sm',
-    'flex items-center justify-center gap-2',
+    'inline-flex items-center justify-center gap-2',
+    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10',
     disabled ? 'disabled:opacity-50 disabled:cursor-not-allowed' : '',
   ]
     .filter(Boolean)

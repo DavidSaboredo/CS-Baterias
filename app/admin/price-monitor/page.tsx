@@ -19,6 +19,7 @@ import {
   detectarArticulosStockDesdeUrl,
   guardarDeteccionEnHistorico,
 } from '@/app/actions/scraper'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 
 /**
  * Interfaz que representa una fuente de scraping
@@ -320,7 +321,7 @@ export default function PaginaMonitorPrecios() {
                 type="button"
                 onClick={analizarUrl}
                 disabled={analizandoUrl}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 disabled:opacity-60"
+                className={getPrimaryButtonClasses({ color: 'blue', disabled: analizandoUrl, fullWidth: false, size: 'sm' })}
               >
                 <Search className="w-4 h-4" />
                 {analizandoUrl ? 'Analizando...' : 'Buscar articulos'}
@@ -342,14 +343,14 @@ export default function PaginaMonitorPrecios() {
                     type="button"
                     onClick={guardarResultadosEnHistorico}
                     disabled={guardandoHistorico}
-                    className="rounded-lg bg-emerald-600 px-3 py-2 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-60"
+                    className={getPrimaryButtonClasses({ color: 'green', disabled: guardandoHistorico, fullWidth: false, size: 'sm' })}
                   >
                     {guardandoHistorico ? 'Guardando...' : 'Guardar en historico'}
                   </button>
                   <button
                     type="button"
                     onClick={usarDeteccionComoFuente}
-                    className="rounded-lg bg-gray-900 px-3 py-2 text-white text-sm font-medium hover:bg-black"
+                    className={getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })}
                   >
                     Usar URL en nueva fuente
                   </button>
@@ -416,7 +417,7 @@ export default function PaginaMonitorPrecios() {
           {!mostrarFormulario ? (
             <button
               onClick={() => setMostrarFormulario(true)}
-              className="mb-6 flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white font-medium hover:bg-red-700 transition-colors"
+              className={`${getPrimaryButtonClasses({ color: 'red', fullWidth: false, size: 'sm' })} mb-6`}
             >
               <Plus className="w-5 h-5" />
               Agregar Fuente
@@ -484,14 +485,14 @@ export default function PaginaMonitorPrecios() {
                   <button
                     type="submit"
                     disabled={enviando}
-                    className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    className={`${getPrimaryButtonClasses({ color: 'red', disabled: enviando, fullWidth: false, size: 'sm' })} flex-1`}
                   >
                     {enviando ? 'Guardando...' : fuenteEditando ? 'Actualizar' : 'Guardar'}
                   </button>
                   <button
                     type="button"
                     onClick={cancelarEdicion}
-                    className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-gray-700 font-medium hover:bg-gray-300 transition-colors"
+                    className={`${getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })} flex-1`}
                   >
                     Cancelar
                   </button>

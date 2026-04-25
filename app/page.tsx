@@ -393,8 +393,7 @@ export default async function Dashboard() {
           </div>
         </div>
       </div>
-    </div>
-  )
+
       {/* Widget de Alertas de Precios - Solo visible si hay variación >15% */}
       <div className="bg-white rounded-2xl shadow-sm border border-orange-100 bg-gradient-to-r from-orange-50/70 to-white overflow-hidden">
         <div className="p-6 border-b border-orange-100 flex justify-between items-center">
@@ -415,8 +414,8 @@ export default async function Dashboard() {
               <p className="text-sm font-medium text-blue-900">Sistema activo y listo</p>
               <p className="text-xs text-blue-700 mt-1">Agrega fuentes en el Monitor de Precios para comenzar</p>
             </div>
-            <Link 
-              href="/admin/price-monitor" 
+            <Link
+              href="/admin/price-monitor"
               className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors whitespace-nowrap"
             >
               Configurar →
@@ -424,4 +423,6 @@ export default async function Dashboard() {
           </div>
         </div>
       </div>
+    </div>
+  )
 }

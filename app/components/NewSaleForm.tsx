@@ -198,7 +198,7 @@ export default function NewSaleForm() {
               type="button"
               onClick={handleLookupByCode}
               disabled={isScanning}
-              className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
+              className={getPrimaryButtonClasses({ color: 'gray', disabled: isScanning, fullWidth: false })}
             >
               {isScanning ? 'Buscando…' : 'Buscar'}
             </button>
@@ -321,7 +321,7 @@ export default function NewSaleForm() {
         <button
           type="submit"
           disabled={isSubmitting || !selectedClient || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT}
-          className={getPrimaryButtonClasses({ color: 'green', disabled: isSubmitting || !selectedClient || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT })}
+          className={getPrimaryButtonClasses({ color: 'green', disabled: isSubmitting || !selectedClient || !selectedProduct || (discountInfo?.percent || 0) > MAX_DISCOUNT_PERCENT, fullWidth: true })}
         >
           {isSubmitting ? 'Procesando...' : 'Confirmar Venta'}
         </button>

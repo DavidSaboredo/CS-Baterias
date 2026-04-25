@@ -70,7 +70,17 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
 
       <div className="space-y-6 mb-8">
         <ProductCodeLookup />
-        <ProductImportPanel />
+        <ProductImportPanel
+          productsForExport={products.map((p) => ({
+            codigoAleatorio: p.codigoAleatorio,
+            brand: p.brand,
+            model: p.model,
+            amperage: p.amperage,
+            stock: p.stock,
+            minStock: p.minStock,
+            price: p.price,
+          }))}
+        />
         <ProductCodeLabels
           products={products.map((p) => ({
             id: p.id,

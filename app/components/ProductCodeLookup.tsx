@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { isValidProductCode, normalizeProductCode } from '@/lib/product-code.js';
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles';
 
 type Product = {
   id: number;
@@ -103,7 +104,7 @@ export default function ProductCodeLookup() {
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
+          className={`${getPrimaryButtonClasses({ color: 'gray', disabled: isLoading, fullWidth: false, size: 'sm' })} w-full md:w-auto`}
         >
           {isLoading ? 'Buscando…' : 'Buscar'}
         </button>
@@ -148,7 +149,7 @@ export default function ProductCodeLookup() {
                 onClick={async () => {
                   await navigator.clipboard.writeText(product.codigoAleatorio);
                 }}
-                className="text-sm bg-white border border-gray-200 px-3 py-2 rounded hover:bg-gray-100"
+                className={getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })}
               >
                 Copiar
               </button>
@@ -182,7 +183,7 @@ export default function ProductCodeLookup() {
                   onClick={async () => {
                     await navigator.clipboard.writeText(p.codigoAleatorio);
                   }}
-                  className="text-sm bg-gray-900 text-white px-3 py-2 rounded hover:bg-gray-800"
+                  className={getPrimaryButtonClasses({ color: 'gray', fullWidth: true, size: 'sm' })}
                 >
                   Copiar código
                 </button>

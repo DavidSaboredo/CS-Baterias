@@ -6,6 +6,7 @@ import { Printer, Search, Plus, Trash2, FileText, Wrench, ClipboardList, User, P
 import { jsPDF } from 'jspdf'
 import { toWhatsAppPhone } from '@/lib/phone-utils'
 import ProductSearchCombo, { type Product as SearchProduct } from './ProductSearchCombo'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 
 type Client = {
   id: number
@@ -816,7 +817,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
                 type="button"
                 onClick={handleShareDocument}
                 disabled={!canOpenWhatsAppChat}
-                className="w-full border border-gray-300 bg-white text-gray-800 py-3 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium transition-colors"
+                className={getSecondaryButtonClasses({ fullWidth: true, disabled: !canOpenWhatsAppChat })}
               >
                 <MessageCircle className="w-5 h-5" />
                 Iniciar chat
@@ -826,7 +827,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
                 type="button"
                 onClick={handleDownloadPdfDocument}
                 disabled={!canGenerateDocument}
-                className="w-full border border-gray-300 bg-white text-gray-800 py-3 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium transition-colors"
+                className={getSecondaryButtonClasses({ fullWidth: true, disabled: !canGenerateDocument })}
               >
                 <Download className="w-5 h-5" />
                 Descargar PDF
@@ -836,7 +837,7 @@ export default function WorkshopManager({ clients }: { clients: Client[] }) {
                 type="button"
                 onClick={() => handlePrint()}
                 disabled={!canGenerateDocument}
-                className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium transition-colors"
+                className={getPrimaryButtonClasses({ color: 'gray', fullWidth: true, disabled: !canGenerateDocument })}
               >
                 <Printer className="w-5 h-5" />
                 Generar {DOCUMENT_TYPES[docType].label}

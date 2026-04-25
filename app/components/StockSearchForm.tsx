@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 
 type StockSearchFormProps = {
   initialQuery: string
@@ -62,14 +63,14 @@ export default function StockSearchForm({ initialQuery }: StockSearchFormProps) 
         placeholder="Buscar por marca, modelo o amperaje..."
         className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border"
       />
-      <button type="submit" className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">
+      <button type="submit" className={getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })}>
         Buscar
       </button>
       {query.trim() && (
         <button
           type="button"
           onClick={handleClear}
-          className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 flex items-center text-sm font-medium"
+          className={getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })}
         >
           Limpiar
         </button>

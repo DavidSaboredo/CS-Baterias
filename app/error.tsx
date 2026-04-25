@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { getPrimaryButtonClasses } from '@/lib/button-styles'
 
 export default function Error({
   error,
@@ -49,7 +50,7 @@ export default function Error({
           // Attempt to recover by trying to re-render the segment
           () => reset()
         }
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className={getPrimaryButtonClasses({ color: 'blue', fullWidth: false, size: 'sm' })}
       >
         Intentar de nuevo
       </button>

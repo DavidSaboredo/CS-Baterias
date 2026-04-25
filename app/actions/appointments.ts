@@ -31,24 +31,59 @@ export async function getAppointments(start: Date, end: Date) {
 export async function createAppointment(data: {
   startTime: Date
   duration: number // in minutes
-  clientId: number
+  clientId?: number
+  newClient?: {
+    name: string
+    phone?: string
+    licensePlate?: string
+  }
   reason: string
   description?: string
 }) {
   try {
+    let clientId = data.clientId
+    if (!clientId) {
+      const rawName = (data.newClient?.name || '').toString().trim()
+      if (!rawName) {
+        return { success: false, error: 'El nombre del cliente es obligatorio.' }
+      }
+
+      const rawPlate = (data.newClient?.licensePlate || '').toString().trim()
+      const licensePlate = rawPlate ? rawPlate.toUpperCase() : null
+      const phone = (data.newClient?.phone || '').toString().trim() || null
+
+      const existing = licensePlate
+        ? await prisma.client.findUnique({ where: { licensePlate } })
+        : null
+
+      const client =
+        existing ||
+        (await prisma.client.create({
+          data: {
+            name: rawName,
+            phone,
+            licensePlate,
+          },
+        }))
+
+      clientId = client.id
+    }
+
     const endTime = new Date(data.startTime.getTime() + data.duration * 60000)
 
     const appointment = await prisma.appointment.create({
       data: {
         startTime: data.startTime,
         endTime: endTime,
-        clientId: data.clientId,
+        clientId,
         reason: data.reason,
         description: data.description,
       },
     })
 
     revalidatePath('/')
+    revalidatePath('/appointments')
+    revalidatePath('/clients')
     return { success: true, data: appointment }
   } catch (error) {
     console.error('Error creating appointment:', error)
@@ -62,6 +97,7 @@ export async function deleteAppointment(id: number) {
       where: { id },
     })
     revalidatePath('/')
+    revalidatePath('/appointments')
     return { success: true }
   } catch (error) {
     console.error('Error deleting appointment:', error)

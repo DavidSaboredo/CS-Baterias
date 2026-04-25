@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { Edit2, X, Check, Lock, Package, Upload } from 'lucide-react'
 import { updateProductStock } from '@/app/actions'
-import { getPrimaryButtonClasses } from '@/lib/button-styles'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 
 interface EditStockButtonProps {
   productId: number
@@ -255,14 +255,14 @@ export default function EditStockButton({
                   setRemoveImage(false)
                   if (fileInputRef.current) fileInputRef.current.value = ''
                 }}
-                className="flex-1 px-4 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition-colors"
+                className={`${getSecondaryButtonClasses({ fullWidth: false })} flex-1`}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isUpdating || !password || newStock === ''}
-                className={getPrimaryButtonClasses({ color: 'blue', disabled: isUpdating })}
+                className={`${getPrimaryButtonClasses({ color: 'blue', disabled: isUpdating, fullWidth: false })} flex-1`}
               >
                 {isUpdating ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

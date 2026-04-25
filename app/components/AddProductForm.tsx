@@ -181,7 +181,7 @@ export default function AddProductForm() {
         <button 
           type="submit" 
           disabled={isSubmitting}
-          className={getPrimaryButtonClasses({ color: 'blue', disabled: isSubmitting })}
+          className={getPrimaryButtonClasses({ color: 'blue', disabled: isSubmitting, fullWidth: true })}
         >
           {isSubmitting ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

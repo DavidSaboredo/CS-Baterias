@@ -6,6 +6,7 @@ import AddClientForm from '@/app/components/AddClientForm'
 import Link from 'next/link'
 import { getWhatsAppLink } from '@/lib/phone-utils'
 import { redirect } from 'next/navigation'
+import { getPrimaryButtonClasses, getSecondaryButtonClasses } from '@/lib/button-styles'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,11 +60,11 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             placeholder="Buscar por nombre o patente..."
             className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border"
           />
-          <button type="submit" className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">
+          <button type="submit" className={getPrimaryButtonClasses({ color: 'gray', fullWidth: false, size: 'sm' })}>
             Buscar
           </button>
           {query && (
-            <Link href="/clients" className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 flex items-center text-sm font-medium no-underline">
+            <Link href="/clients" className={`${getSecondaryButtonClasses({ fullWidth: false, size: 'sm' })} no-underline`}>
               Limpiar
             </Link>
           )}

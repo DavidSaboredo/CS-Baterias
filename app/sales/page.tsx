@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import DeleteSaleButton from '@/app/components/DeleteSaleButton'
+import { getPrimaryButtonClasses } from '@/lib/button-styles'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,7 @@ export default async function SalesPage() {
         <h1 className="text-2xl font-bold text-gray-800">Ventas</h1>
         <Link
           href="/sales/new"
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors font-medium shadow-sm flex items-center gap-2"
+          className={getPrimaryButtonClasses({ color: 'green', fullWidth: false, size: 'sm' })}
         >
           + Nueva Venta
         </Link>
